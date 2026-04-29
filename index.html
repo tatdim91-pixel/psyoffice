@@ -1,0 +1,1766 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Γραφείο</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a0a0b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Γραφείο">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --bg:#111112;--bg2:#1a1a1c;--bg3:#0a0a0b;
+  --text:#f5f5f7;--text2:#8e8e9a;--text3:#555560;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.14);
+  --green:#00c896;--danger:#FF3B5C;--amber:#ffb340;--blue:#5b8df5;
+  --accent:#00c896;
+  --r:12px;--rl:20px;
+  --shadow:none;
+}
+[data-theme="light"]{
+  --bg:#ffffff;--bg2:#f2f2f4;--bg3:#e8e8ec;
+  --text:#0a0a0b;--text2:#5a5a66;--text3:#9a9aa6;
+  --border:rgba(0,0,0,0.07);--border2:rgba(0,0,0,0.13);
+  --green:#00a87c;--danger:#e8254a;--amber:#d4860a;--blue:#3d6fe0;
+  --accent:#00a87c;
+  --shadow:0 1px 4px rgba(0,0,0,0.08);
+}
+[data-theme="light"] body{background:var(--bg3)}
+[data-theme="light"] .card,[data-theme="light"] .form-card,[data-theme="light"] .stat-card,
+[data-theme="light"] .bottom-sheet,[data-theme="light"] .settings-sheet,
+[data-theme="light"] .del-modal,[data-theme="light"] .mc{box-shadow:var(--shadow)}
+[data-theme="light"] .bottom-nav{background:#fff;border-top:0.5px solid var(--border)}
+[data-theme="light"] .topbar{background:var(--bg3)}
+[data-theme="light"] input,[data-theme="light"] select{background:#fff;border-color:var(--border2)}
+[data-theme="light"] input:focus,[data-theme="light"] select:focus{background:#fff}
+[data-theme="light"] .toggle-btn.active{background:rgba(0,0,0,0.1);color:var(--text)}
+[data-theme="light"] .toggle-btn:not(.active){color:var(--text2)}
+[data-theme="light"] .toggle-wrap{background:var(--bg2)}
+[data-theme="light"] .fab{box-shadow:0 6px 24px rgba(0,168,124,.35)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg3);color:var(--text);font-size:15px;line-height:1.5;overscroll-behavior:none}
+
+.app{max-width:540px;margin:0 auto;min-height:100vh;position:relative;padding-bottom:80px}
+.screen{display:none;padding:0 0 1rem}
+.screen.active{display:block}
+
+/* TOP BAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:56px 20px 16px;position:sticky;top:0;background:var(--bg3);z-index:10}
+.tb-title{font-size:20px;font-weight:800;color:var(--text);letter-spacing:-.03em}
+.tb-right{display:flex;gap:8px;align-items:center}
+.icon-btn{height:34px;padding:0 12px;border-radius:17px;background:var(--bg2);border:none;cursor:pointer;color:var(--text2);font-size:12px;font-weight:600;font-family:inherit;display:flex;align-items:center;gap:6px;transition:background .15s,color .15s}
+.icon-btn:active{background:var(--accent);color:#0a0a0b}
+
+/* HERO */
+.hero{text-align:center;padding:4px 20px 24px}
+.hero-label{font-size:11px;color:var(--text2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
+.hero-amount{font-size:52px;font-weight:800;color:var(--text);letter-spacing:-.04em;line-height:1}
+.hero-chips{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+.hero-chip{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;background:var(--bg);font-size:12px;font-weight:600}
+.hero-chip-dot{width:6px;height:6px;border-radius:50%}
+
+/* STAT GRID */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 16px;margin-bottom:8px}
+.stat-card{background:var(--bg);border-radius:var(--rl);padding:16px 16px 14px;position:relative;overflow:hidden}
+.stat-card-top{height:3px;border-radius:3px 3px 0 0;position:absolute;top:0;left:0;right:0}
+.stat-label{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.stat-val{font-size:22px;font-weight:800;letter-spacing:-.03em;line-height:1}
+.stat-sub{font-size:11px;color:var(--text2);margin-top:4px}
+.pos{color:var(--green)}.neg{color:var(--danger)}.amb{color:var(--amber)}.inf{color:var(--blue)}.neu{color:var(--text)}
+
+/* SECTION */
+.section{padding:0 16px;margin-bottom:8px}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 2px}
+.sec-title{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.07em}
+
+/* CARD */
+.card{background:var(--bg);border-radius:var(--rl);overflow:hidden;margin-bottom:8px}
+.card-pad{padding:16px}
+
+/* TX ROW */
+.tx-row{display:flex;align-items:center;gap:14px;padding:13px 16px;border-bottom:0.5px solid var(--border)}
+.tx-row:last-child{border-bottom:none}
+.tx-icon{width:40px;height:40px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.tx-icon.income{background:rgba(0,200,150,.12)}
+.tx-icon.expense{background:rgba(255,59,92,.12)}
+.tx-icon.other{background:rgba(91,141,245,.12)}
+.tx-info{flex:1;min-width:0}
+.tx-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx-sub{font-size:12px;color:var(--text2);margin-top:1px}
+.tx-amt{font-size:15px;font-weight:700;white-space:nowrap}
+
+/* FORM */
+.form-card{background:var(--bg);border-radius:var(--rl);padding:16px;margin-bottom:8px}
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.fg label,.field-label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+input,select{width:100%;padding:12px 14px;border:0.5px solid var(--border2);border-radius:var(--r);background:var(--bg2);color:var(--text);font-size:14px;font-family:inherit;outline:none;-webkit-appearance:none}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,200,150,.12)}
+input[type=number]{-moz-appearance:textfield}
+input::placeholder{color:var(--text3)}
+select option{background:#1a1a1c}
+.check-row{display:flex;align-items:center;gap:10px;padding:10px 0;cursor:pointer}
+.check-row input[type=checkbox]{width:18px;height:18px;flex-shrink:0;accent-color:var(--accent)}
+.check-label{font-size:13px;color:var(--text2)}
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+/* STEPPER — replaces bare number inputs for session counts */
+.stepper-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:4px}
+.stepper-item{display:flex;flex-direction:column;gap:6px}
+.stepper-item-label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;font-weight:600;display:flex;align-items:center;gap:5px}
+.stepper-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.stepper-row{display:flex;align-items:center;background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--r);overflow:hidden;height:52px;transition:border-color .15s}
+.stepper-row.active{border-color:var(--accent)}
+.stepper-btn{width:52px;height:52px;flex-shrink:0;background:none;border:none;cursor:pointer;color:var(--text2);font-size:26px;font-weight:300;display:flex;align-items:center;justify-content:center;font-family:inherit;transition:background .1s,color .1s;line-height:1}
+.stepper-btn:active{background:rgba(255,255,255,.1);color:var(--text)}
+.stepper-num{flex:1;text-align:center;font-size:24px;font-weight:700;color:var(--text3);user-select:none;transition:color .15s}
+.stepper-num.has-val{color:var(--accent)}
+.stepper-sub{font-size:11px;color:var(--text2);text-align:center;height:16px;transition:opacity .2s}
+
+/* BUTTONS */
+.btn{padding:12px 20px;border-radius:var(--r);font-size:14px;cursor:pointer;font-weight:700;border:0.5px solid var(--border2);background:var(--bg2);color:var(--text);font-family:inherit;transition:opacity .15s;letter-spacing:-.01em}
+.btn:active{opacity:.7}
+.btn-p{background:var(--accent);color:#0a0a0b;border-color:var(--accent)}
+.btn-full{width:100%;padding:14px;border-radius:14px;font-size:15px}
+.btn-x{background:none;border:none;cursor:pointer;color:var(--text3);font-size:18px;padding:4px 8px;border-radius:6px;font-family:inherit;transition:color .1s}
+.btn-x:active{color:var(--danger)}
+
+/* FAB — floating action button for quick entry */
+.fab{position:fixed;bottom:92px;right:20px;width:58px;height:58px;border-radius:50%;background:var(--accent);color:#0a0a0b;border:none;cursor:pointer;font-size:30px;font-weight:300;display:flex;align-items:center;justify-content:center;z-index:90;box-shadow:0 6px 28px rgba(0,200,150,.4);transition:transform .15s,box-shadow .15s;line-height:1}
+.fab:active{transform:scale(.9);box-shadow:0 2px 12px rgba(0,200,150,.3)}
+@media(min-width:540px){.fab{right:calc(50% - 270px + 20px)}}
+
+/* BOTTOM SHEET */
+.sheet-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:150;align-items:flex-end}
+.sheet-overlay.open{display:flex}
+.bottom-sheet{background:var(--bg);border-radius:24px 24px 0 0;width:100%;max-height:92vh;overflow-y:auto;animation:sheetUp .28s cubic-bezier(.32,1.1,.5,1)}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-drag{width:36px;height:4px;border-radius:2px;background:var(--border2);margin:14px auto 0}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;padding:14px 20px 6px}
+.sheet-head-title{font-size:18px;font-weight:800;letter-spacing:-.02em}
+.sheet-close{width:30px;height:30px;border-radius:50%;background:var(--bg2);border:none;cursor:pointer;color:var(--text2);font-size:16px;display:flex;align-items:center;justify-content:center;font-family:inherit}
+.sheet-body{padding:4px 20px calc(24px + env(safe-area-inset-bottom,0px))}
+
+/* DELETE MODAL — custom, replaces native confirm() */
+.del-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;align-items:flex-end;justify-content:center}
+.del-modal-overlay.open{display:flex}
+.del-modal{background:var(--bg);border-radius:24px 24px 0 0;width:100%;max-width:540px;padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));animation:sheetUp .2s ease}
+.del-modal-title{font-size:17px;font-weight:700;margin-bottom:6px}
+.del-modal-desc{font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.5}
+.del-modal-btns{display:flex;gap:10px}
+
+/* FLASH */
+.flash{font-size:12px;color:var(--green);opacity:0;transition:opacity .3s;margin-left:8px}
+
+/* TOGGLES */
+.toggle-wrap{display:flex;background:var(--bg2);border-radius:var(--r);padding:3px;gap:2px;margin-bottom:12px}
+.toggle-btn{flex:1;padding:8px 12px;font-size:12px;font-weight:700;border-radius:9px;border:none;cursor:pointer;transition:background .15s,color .15s;font-family:inherit;text-align:center}
+.toggle-btn.active{background:rgba(255,255,255,0.12);color:#fff}
+.toggle-btn:not(.active){background:transparent;color:var(--text2)}
+
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-top:0.5px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom,0px)}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 0 8px;cursor:pointer;border:none;background:none;font-family:inherit;color:var(--text2);transition:color .15s}
+.nav-icon{width:22px;height:22px;margin-bottom:3px;display:flex;align-items:center;justify-content:center}
+.nav-label{font-size:10px;font-weight:600;color:inherit;letter-spacing:.02em}
+.nav-item.active{color:var(--accent)}
+
+/* SETTINGS PANEL */
+.settings-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:flex-end}
+.settings-overlay.open{display:flex}
+.settings-sheet{background:var(--bg);border-radius:24px 24px 0 0;width:100%;max-height:88vh;overflow-y:auto;padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px))}
+.sh-handle{width:36px;height:4px;border-radius:2px;background:var(--border2);margin:0 auto 20px}
+
+/* COLLAPSIBLE */
+.collapse-btn{width:100%;display:flex;align-items:center;justify-content:space-between;background:none;border:none;cursor:pointer;font-family:inherit;padding:14px 16px;color:var(--text)}
+.collapse-body{padding:0 16px 14px;display:none}
+.collapse-body.open{display:block}
+
+/* PROGRESS */
+.progress-wrap{height:6px;border-radius:3px;background:var(--bg2);overflow:hidden;margin:6px 0}
+.progress-fill{height:100%;border-radius:3px;transition:width .5s}
+
+/* MONTH GRID — 12-month income overview */
+.month-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.mc{background:var(--bg);border-radius:10px;padding:10px 8px 8px;text-align:center;transition:opacity .2s}
+.mc-name{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
+.mc-amt{font-size:12px;font-weight:700;letter-spacing:-.02em;line-height:1.2;min-height:16px}
+.mc-bar{height:3px;border-radius:2px;background:rgba(255,255,255,.06);margin-top:6px;overflow:hidden}
+.mc-fill{height:100%;border-radius:2px;background:var(--accent);transition:width .5s}
+.mc.current-month{border:1.5px solid var(--accent);background:rgba(0,200,150,.06)}
+[data-theme="light"] .mc.current-month{background:rgba(0,168,124,.07)}
+.mc.current-month .mc-name{color:var(--accent)}
+
+/* CHART EMPTY STATE */
+.chart-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:180px;gap:8px}
+.chart-empty-icon{font-size:28px;opacity:.35}
+.chart-empty-text{font-size:13px;color:var(--text3);text-align:center}
+
+/* SAVINGS PROGRESS — replaces the CSS semicircle gauge */
+.sp-status-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.sp-status-text{font-size:18px;font-weight:700}
+.sp-pct{font-size:32px;font-weight:800;letter-spacing:-.03em;line-height:1}
+.sp-track{height:12px;border-radius:6px;background:var(--bg2);overflow:hidden;margin-bottom:10px}
+.sp-fill{height:100%;border-radius:6px;transition:width .7s cubic-bezier(.4,0,.2,1)}
+.sp-detail-row{display:flex;justify-content:space-between;font-size:12px;color:var(--text2)}
+
+/* MISC */
+.divider{border:none;border-top:0.5px solid var(--border);margin:.75rem 0}
+.sum-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid var(--border);font-size:13px}
+.sum-row:last-child{border-bottom:none}
+.sum-row.tot{font-weight:700;font-size:14px;padding-top:10px}
+.empty{text-align:center;padding:32px 16px;color:var(--text2);font-size:13px}
+
+/* EMPTY / ONBOARDING STATE */
+.onboard{text-align:center;padding:28px 20px}
+.onboard-icon{width:56px;height:56px;border-radius:18px;background:rgba(0,200,150,.12);margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:26px}
+.onboard-title{font-size:16px;font-weight:700;margin-bottom:8px}
+.onboard-desc{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:18px}
+
+/* TYPE ROW */
+.type-row{display:grid;grid-template-columns:1fr 80px 80px 34px;gap:8px;align-items:center;margin-bottom:8px}
+
+/* CHART */
+.chart-wrap{position:relative;height:180px;margin:4px 0 0}
+
+/* HIST ROW — replaces 5-col grid, mobile-friendly */
+.hist-row{padding:12px 16px;border-bottom:0.5px solid var(--border)}
+.hist-row:last-child{border-bottom:none}
+.hist-row:active{background:var(--bg2)}
+.hist-top{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.hist-period{font-size:13px;font-weight:700;color:var(--text);flex-shrink:0}
+.hist-badges{display:flex;gap:4px;flex:1;flex-wrap:wrap}
+.hist-amount{font-size:15px;font-weight:800;white-space:nowrap;letter-spacing:-.02em}
+.hist-bottom{display:flex;align-items:center;gap:0}
+.hist-breakdown{flex:1;display:flex;flex-wrap:wrap;gap:4px 10px}
+.hist-actions{display:flex;gap:0;flex-shrink:0}
+.bracket-bar{height:5px;border-radius:3px;background:var(--bg2);overflow:hidden;margin:3px 0 10px}
+.bracket-fill{height:100%;border-radius:3px;background:var(--amber)}
+
+/* EXP ROW */
+.exp-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:0.5px solid var(--border)}
+.exp-row:last-child{border-bottom:none}
+
+/* PILL */
+.pill{display:inline-block;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.02em}
+.pill-r{background:rgba(255,59,92,.15);color:#FF3B5C}
+.pill-g{background:rgba(0,200,150,.15);color:#00c896}
+.pill-a{background:rgba(255,179,64,.15);color:#ffb340}
+.pill-b{background:rgba(91,141,245,.15);color:#5b8df5}
+.pill-gray{background:rgba(255,255,255,.08);color:#8e8e9a}
+
+@media(min-width:540px){.bottom-nav,.del-modal-overlay .del-modal,.settings-overlay .settings-sheet{max-width:540px;margin-left:auto;margin-right:auto}.fab{right:calc(50% - 270px + 20px)}}
+@media(max-width:380px){.ent-row{grid-template-columns:80px 50px 1fr 80px 50px}.type-row{grid-template-columns:1fr 70px 70px 30px}}
+</style>
+</head>
+<body>
+<div class="app">
+
+
+
+<!-- ══════ DELETE MODAL (replaces native confirm) ══════ -->
+<div class="del-modal-overlay" id="del-modal-overlay">
+  <div class="del-modal">
+    <div class="del-modal-title" id="del-modal-title">Διαγραφή;</div>
+    <div class="del-modal-desc" id="del-modal-desc">Αυτή η ενέργεια δεν αναιρείται.</div>
+    <div class="del-modal-btns">
+      <button class="btn btn-full" onclick="executeDel()" style="flex:1;background:var(--danger);color:#fff;border-color:var(--danger)">Διαγραφή</button>
+      <button class="btn btn-full" onclick="cancelDel()" style="flex:1">Άκυρο</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ SETTINGS OVERLAY ══════ -->
+<div class="settings-overlay" id="settings-overlay" onclick="if(event.target===this)toggleSettings()">
+<div class="settings-sheet">
+  <div class="sh-handle"></div>
+  <div style="font-size:17px;font-weight:800;margin-bottom:20px;letter-spacing:-.02em">Ρυθμίσεις</div>
+  <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Τύποι συνεδριών</div>
+  <div style="display:grid;grid-template-columns:1fr 80px 80px 34px;gap:8px;align-items:center;margin-bottom:6px">
+    <div style="font-size:11px;color:var(--text2)">Τύπος</div><div style="font-size:11px;color:var(--text2)">€/ώρα</div>
+    <div style="font-size:11px;color:var(--text2)">Λεπτά</div><div></div>
+  </div>
+  <div id="types-list"></div>
+  <div class="type-row" style="margin-top:4px">
+    <input type="text" id="nt-name" placeholder="π.χ. Ζεύγος...">
+    <input type="number" id="nt-rate" placeholder="€80" min="0" step="5">
+    <select id="nt-dur"><option value="45">45λ</option><option value="50">50λ</option><option value="60" selected>60λ</option><option value="90">90λ</option></select>
+    <button class="btn btn-p" onclick="addType()" style="padding:8px 10px;font-size:16px">+</button>
+  </div>
+  <div class="divider"></div>
+  <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Φορολογικό προφίλ</div>
+  <div id="tax-profile-preview" style="background:var(--bg2);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.7"></div>
+  <div class="row-3" style="margin-bottom:12px">
+    <div class="fg"><label>Ηλικία</label>
+      <select id="s-age-group"><option value="over30" selected>Άνω 30</option><option value="26to30">26–30</option><option value="under25">Έως 25</option></select>
+    </div>
+    <div class="fg"><label>Τέκνα</label>
+      <select id="s-children"><option value="0" selected>0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4plus">4+</option></select>
+    </div>
+    <div class="fg"><label>Κατοικία</label>
+      <select id="s-residence"><option value="greece" selected>Ελλάδα</option><option value="island">Νησί</option></select>
+    </div>
+  </div>
+  <div class="divider"></div>
+  <div class="row-2" style="margin-bottom:12px">
+    <div class="fg"><label>Κατηγορία ΕΦΚΑ</label>
+      <select id="efka-cat" onchange="efkaToggle()">
+        <option value="218">Κατ.1 — €218</option><option value="265" selected>Κατ.2 — €265</option>
+        <option value="318">Κατ.3 — €318</option><option value="custom">Προσαρμ.</option>
+      </select>
+    </div>
+    <div class="fg" id="efka-custom-w" style="display:none"><label>Μηνιαίο €</label><input type="number" id="efka-custom" placeholder="290" min="0"></div>
+    <div class="fg"><label>Μήνες εργ./έτος</label><input type="number" id="s-work-months" placeholder="12" min="1" max="12" value="12"></div>
+  </div>
+  <div class="row-2" style="margin-bottom:16px">
+    <div class="fg"><label>Στόχος ώρες/εβδ.</label><input type="number" id="s-target-h" placeholder="20" min="1"></div>
+    <div class="fg"><label>Στόχος εισ./μήνα €</label><input type="number" id="s-target-inc" placeholder="2000" min="0"></div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center">
+    <button class="btn btn-p btn-full" onclick="saveSettings()">Αποθήκευση</button>
+    <button class="btn btn-full" style="background:#2a2a2e;color:var(--text2)" onclick="toggleSettings()">Κλείσιμο</button>
+    <span class="flash" id="fl-set">✓</span>
+  </div>
+</div>
+</div>
+
+<!-- ══════ SCREEN: ΓΡΑΦΕΙΟ ══════ -->
+<div class="screen active" id="screen-main">
+  <div class="topbar">
+    <div class="tb-title">Γραφείο</div>
+    <div class="tb-right">
+      <select id="yr-display" onchange="handleYearChange(this.value)" style="height:34px;padding:0 10px;border-radius:17px;background:var(--bg2);color:var(--text);border:0.5px solid var(--border2);font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-appearance:none;text-align:center">
+        <option value="2024">2024</option>
+        <option value="2025">2025</option>
+        <option value="2026" selected>2026</option>
+        <option value="2027">2027</option>
+      </select>
+      <button class="icon-btn" id="theme-btn" onclick="toggleTheme()" title="Εναλλαγή θέματος" style="font-size:15px;width:34px;justify-content:center;padding:0">☀</button>
+      <button class="icon-btn" onclick="toggleSettings()" style="font-size:22px;width:38px;padding:0;justify-content:center">⚙︎</button>
+    </div>
+  </div>
+
+  <div class="hero">
+    <div class="hero-label">Εισόδημα γραφείου έτους</div>
+    <div class="hero-amount" id="hero-amount">€0</div>
+    <div class="hero-chips" id="hero-chips"></div>
+  </div>
+
+  <div class="stat-grid" id="main-stats"></div>
+  <div class="section" id="goal-section"></div>
+
+  <!-- Month grid (NEW) -->
+  <div class="section">
+    <div class="sec-hdr"><span class="sec-title">Μηνιαία επισκόπηση</span></div>
+    <div class="month-grid" id="month-grid"></div>
+  </div>
+
+  <!-- Chart -->
+  <div class="section">
+    <div class="sec-hdr">
+      <span class="sec-title">Γράφημα εξέλιξης</span>
+      <div style="display:flex;gap:10px">
+        <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2)"><span style="width:8px;height:8px;border-radius:2px;background:var(--green);display:inline-block"></span>Εισόδημα</span>
+        <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2)"><span style="width:8px;height:8px;border-radius:2px;background:var(--danger);display:inline-block"></span>Έξοδα</span>
+        <span id="chart-goal-legend" style="display:none;align-items:center;gap:4px;font-size:11px;color:var(--text2)"><span style="width:16px;height:2px;background:var(--blue);display:inline-block;border-radius:1px"></span>Στόχος</span>
+      </div>
+    </div>
+    <div class="card card-pad" style="padding-top:12px">
+      <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Annual breakdown collapsible -->
+  <div class="section">
+    <div class="card" style="margin-bottom:8px">
+      <button class="collapse-btn" onclick="toggleCollapse('yr-detail-body',this)">
+        <span style="font-size:14px;font-weight:700">Ανάλυση έτους</span>
+        <span style="font-size:18px;color:var(--text2)">▴</span>
+      </button>
+      <div id="yr-detail-body" class="collapse-body open" style="display:block">
+        <div id="yr-summary"></div>
+        <div class="divider"></div>
+        <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Κλιμάκια φόρου</div>
+        <div id="yr-brackets"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Expense form -->
+
+
+  <!-- History -->
+  <div class="section">
+    <div class="sec-hdr">
+      <span class="sec-title">Ιστορικό</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="toggle-wrap" style="margin:0">
+          <button class="toggle-btn active" id="hist-sess-btn" onclick="setHistTab('sessions')" style="padding:5px 10px">Συνεδρίες</button>
+          <button class="toggle-btn" id="hist-exp-btn" onclick="setHistTab('expenses')" style="padding:5px 10px">Έξοδα</button>
+        </div>
+        <select id="wk-yr-filter" onchange="renderEntryList()" style="width:80px;font-size:12px;padding:6px 8px"><option value="all">Όλα</option></select>
+      </div>
+    </div>
+    <div class="card">
+      <div id="hist-sessions-panel">
+        <div id="entry-list-body"></div>
+      </div>
+      <div id="hist-expenses-panel" style="display:none">
+        <div id="exp-list-inline" style="padding:0 4px"></div>
+      </div>
+    </div>
+  </div>
+
+  <p style="text-align:center;font-size:11px;color:var(--text3);padding:8px 16px 0">Κλιμάκια Ελλάδας 2026 · Ν.5246/2025 · Επαληθεύστε με τον λογιστή σας</p>
+</div>
+
+<!-- ══════ SCREEN: ΑΛΛΗ ΕΡΓΑΣΙΑ ══════ -->
+<div class="screen" id="screen-other">
+  <div class="topbar">
+    <div class="tb-title">Άλλη Εργασία</div>
+    <div class="tb-right"><button class="icon-btn" id="yr-display-other">2026</button></div>
+  </div>
+  <div class="section">
+    <div class="stat-grid" id="other-stats" style="margin-bottom:8px"></div>
+    <div class="sec-hdr" style="margin-top:8px"><span class="sec-title">Νέα πηγή εισοδήματος</span></div>
+    <div class="form-card">
+      <div class="fg"><label>Πηγή / Εργοδότης</label><input type="text" id="oi-name" placeholder="π.χ. Σχολείο, Κέντρο..."></div>
+      <div class="row-2">
+        <div class="fg"><label>Ποσό / μήνα (€)</label><input type="number" id="oi-amt" placeholder="0" min="0" step="10"></div>
+        <div class="fg"><label>Τύπος</label>
+          <select id="oi-type"><option value="salary">Μισθός</option><option value="freelance">Αυτοαπασχ.</option><option value="other">Άλλο</option></select>
+        </div>
+      </div>
+      <div class="row-2">
+        <div class="fg"><label>Από</label><input type="month" id="oi-from"></div>
+        <div class="fg"><label>Έως (κενό = συνεχής)</label><input type="month" id="oi-to"></div>
+      </div>
+      <button class="btn btn-p btn-full" onclick="addOtherIncome()" style="margin-top:4px">Προσθήκη</button>
+      <span class="flash" id="fl-other">✓ Αποθηκεύτηκε</span>
+    </div>
+    <div class="card" id="other-list-card" style="margin-top:8px"><div id="other-list"></div></div>
+  </div>
+</div>
+
+<!-- ══════ SCREEN: ΣΥΝΟΛΙΚΗ ΕΙΚΟΝΑ ══════ -->
+<div class="screen" id="screen-combined">
+  <div class="topbar">
+    <div class="tb-title">Συνολική Εικόνα</div>
+    <div class="tb-right"><button class="icon-btn" id="yr-display-combined">2026</button></div>
+  </div>
+  <div class="section">
+    <div class="stat-grid" id="comb-stats"></div>
+    <div class="card card-pad" style="margin-top:0">
+      <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Ανάλυση ετήσιου εισοδήματος</div>
+      <div id="comb-summary"></div>
+    </div>
+    <div style="margin-top:8px">
+      <div class="sec-hdr"><span class="sec-title">Κλιμάκια φόρου</span></div>
+      <div class="card card-pad" style="padding-top:12px"><div id="comb-brackets"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ SCREEN: ΦΟΡΟΛΟΓΙΚΟΣ ══════ -->
+<div class="screen" id="screen-tax">
+  <div class="topbar">
+    <div class="tb-title">Φορολογικός</div>
+    <div class="tb-right"><button class="icon-btn" id="yr-display-tax">2026</button></div>
+  </div>
+
+  <!-- Savings progress (replaces semicircle gauge) -->
+  <div class="section">
+    <div class="card card-pad">
+      <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px" id="tax-updated"></div>
+      <div id="tax-savings-ui"></div>
+      <div class="divider"></div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font-size:12px;color:var(--text2)">Αποταμίευση φόρων:</span>
+        <input type="number" id="tax-saved" placeholder="€0" min="0" step="50"
+          style="width:110px;text-align:center;font-size:15px;font-weight:700">
+        <button class="btn btn-p" onclick="saveTaxSaved()" style="padding:10px 16px;font-size:13px">Αποθήκευση</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="stat-grid" id="tax-action-cards" style="margin:0 16px 8px"></div>
+
+  <div class="section">
+    <div class="card">
+      <button class="collapse-btn" onclick="toggleCollapse('tax-proj-body',this)">
+        <span style="font-size:14px;font-weight:700">Ανάλυση φόρου</span>
+        <span style="font-size:18px;color:var(--text2)">▾</span>
+      </button>
+      <div id="tax-proj-body" class="collapse-body open" style="display:block"><div id="tax-projection"></div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="card">
+      <button class="collapse-btn" onclick="toggleCollapse('tax-opt-body',this)">
+        <span style="font-size:14px;font-weight:700">Βελτιστοποίηση φόρου</span>
+        <span style="font-size:18px;color:var(--text2)">▾</span>
+      </button>
+      <div id="tax-opt-body" class="collapse-body"><div id="tax-optimizer"></div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="card">
+      <button class="collapse-btn" onclick="toggleCollapse('tax-cal-body',this)">
+        <span style="font-size:14px;font-weight:700">Φορολογικό ημερολόγιο</span>
+        <span style="font-size:18px;color:var(--text2)">▾</span>
+      </button>
+      <div id="tax-cal-body" class="collapse-body"><div id="tax-calendar"></div></div>
+    </div>
+  </div>
+  <p style="text-align:center;font-size:11px;color:var(--text3);padding:8px 16px 0">Εκτιμήσεις βάσει καταχωρημένων δεδομένων · Επαληθεύστε με τον λογιστή σας</p>
+</div>
+
+<!-- ══════ ADD ENTRY OVERLAY ══════ -->
+<div class="settings-overlay" id="add-overlay" onclick="if(event.target===this)closeAddSheet()">
+  <div class="settings-sheet" style="max-height:92vh">
+    <div class="sh-handle"></div>
+
+    <!-- Step 1: Choose type -->
+    <div id="add-step-1">
+      <div style="font-size:17px;font-weight:800;margin-bottom:6px;letter-spacing:-.02em">Νέα καταχώρηση</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:20px">Τι θέλεις να προσθέσεις;</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px">
+        <button onclick="showAddForm('income')" style="background:rgba(0,200,150,0.1);border:1.5px solid rgba(0,200,150,0.3);border-radius:16px;padding:20px 12px;cursor:pointer;font-family:inherit;text-align:center">
+          <div style="font-size:28px;margin-bottom:8px">💼</div>
+          <div style="font-size:14px;font-weight:700;color:var(--green)">Εισόδημα</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:3px">Συνεδρίες γραφείου</div>
+        </button>
+        <button onclick="showAddForm('expense')" style="background:rgba(255,59,92,0.1);border:1.5px solid rgba(255,59,92,0.3);border-radius:16px;padding:20px 12px;cursor:pointer;font-family:inherit;text-align:center">
+          <div style="font-size:28px;margin-bottom:8px">🧾</div>
+          <div style="font-size:14px;font-weight:700;color:var(--red)">Έξοδο</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:3px">Επαγγελματικό έξοδο</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 2a: Income -->
+    <div id="add-step-income" style="display:none">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <button onclick="showAddStep1()" style="background:var(--bg2);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:var(--text2);font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0">←</button>
+        <div>
+          <div style="font-size:17px;font-weight:800;letter-spacing:-.02em">Εισόδημα γραφείου</div>
+          <div style="font-size:12px;color:var(--text2)">Καταχώρηση συνεδριών</div>
+        </div>
+      </div>
+      <div class="toggle-wrap">
+        <button class="toggle-btn active" id="fab-mode-week-btn" onclick="setFabMode('week')">Εβδομαδιαία</button>
+        <button class="toggle-btn" id="fab-mode-month-btn" onclick="setFabMode('month')">Μηνιαία</button>
+      </div>
+      <div id="fab-picker-week" style="margin-bottom:12px">
+        <div class="fg"><label>Εβδομάδα</label><input type="date" id="fab-q-week"></div>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px" id="fab-wl"></div>
+      </div>
+      <div id="fab-picker-month" style="display:none;margin-bottom:12px">
+        <div class="fg"><label>Μήνας</label><input type="month" id="fab-q-month"></div>
+      </div>
+      <div id="fab-session-inputs" style="margin-bottom:12px"></div>
+      <label class="check-row" style="padding:8px 0">
+        <input type="checkbox" id="fab-entry-taxable" checked>
+        <span class="check-label">Υπολογίζεται στον φόρο</span>
+      </label>
+      <button class="btn btn-p btn-full" onclick="submitFabIncome()" style="margin-top:10px">Προσθήκη εισοδήματος</button>
+      <span class="flash" id="fl-fab-income">✓ Αποθηκεύτηκε</span>
+    </div>
+
+    <!-- Step 2b: Expense -->
+    <div id="add-step-expense" style="display:none">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <button onclick="showAddStep1()" style="background:var(--bg2);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:var(--text2);font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0">←</button>
+        <div>
+          <div style="font-size:17px;font-weight:800;letter-spacing:-.02em">Νέο έξοδο</div>
+          <div style="font-size:12px;color:var(--text2)">Επαγγελματικό έξοδο</div>
+        </div>
+      </div>
+      <div class="fg"><label>Όνομα εξόδου</label><input type="text" id="fab-exp-name" placeholder="π.χ. Ενοίκιο, Εποπτεία..."></div>
+      <div class="row-2">
+        <div class="fg"><label>Ποσό (€)</label><input type="number" id="fab-exp-amt" placeholder="0" min="0" step="0.01"></div>
+        <div class="fg"><label>Από μήνα</label><input type="month" id="fab-exp-mo"></div>
+      </div>
+      <label class="check-row">
+        <input type="checkbox" id="fab-exp-deductible" checked>
+        <span class="check-label">Εκπίπτει από τον φόρο</span>
+      </label>
+      <label class="check-row" style="padding-bottom:0">
+        <input type="checkbox" id="fab-exp-recurring" onchange="document.getElementById('fab-exp-until-wrap').style.display=this.checked?'block':'none'">
+        <span class="check-label">Επαναλαμβανόμενο έως:</span>
+      </label>
+      <div id="fab-exp-until-wrap" style="display:none;margin:8px 0"><input type="month" id="fab-exp-until"></div>
+      <button class="btn btn-p btn-full" onclick="submitFabExpense()" style="margin-top:14px;background:var(--red);border-color:var(--red)">Προσθήκη εξόδου</button>
+      <span class="flash" id="fl-fab-expense">✓ Αποθηκεύτηκε</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ BOTTOM NAV ══════ -->
+<nav class="bottom-nav">
+  <button class="nav-item active" id="nav-main" onclick="showPage('main')">
+    <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="12" width="4" height="8" rx="1" fill="currentColor" opacity=".5"/><rect x="9" y="7" width="4" height="13" rx="1" fill="currentColor" opacity=".8"/><rect x="16" y="3" width="4" height="17" rx="1" fill="currentColor"/></svg></div>
+    <span class="nav-label">Γραφείο</span>
+  </button>
+  <button class="nav-item" id="nav-other" onclick="showPage('other')">
+    <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="6" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M7 6V5a4 4 0 018 0v1" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M11 11v2M9 12h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+    <span class="nav-label">Άλλη εργ.</span>
+  </button>
+  <button onclick="openAddSheet()" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border:none;background:none;cursor:pointer;padding:6px 0 8px;margin-top:-16px">
+    <div style="width:50px;height:50px;border-radius:50%;background:#00c896;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,200,150,0.55);border:2.5px solid rgba(255,255,255,0.2)">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg>
+    </div>
+    <span style="font-size:10px;font-weight:700;color:#00c896;margin-top:3px;letter-spacing:.02em">Νέο</span>
+  </button>
+  <button class="nav-item" id="nav-combined" onclick="showPage('combined')">
+    <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M11 3v8l5 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+    <span class="nav-label">Συνολικά</span>
+  </button>
+  <button class="nav-item" id="nav-tax" onclick="showPage('tax')">
+    <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M5 19L11 3l6 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M7.5 13h7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+    <span class="nav-label">Φόρος</span>
+  </button>
+</nav>
+
+</div><!-- /app -->
+
+<script>
+const MN=['Ιανουάριος','Φεβρουάριος','Μάρτιος','Απρίλιος','Μάιος','Ιούνιος','Ιούλιος','Αύγουστος','Σεπτέμβριος','Οκτώβριος','Νοέμβριος','Δεκέμβριος'];
+const MS=['Ιαν','Φεβ','Μαρ','Απρ','Μαΐ','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];
+const TC=['#00c896','#5b8df5','#ffb340','#534AB7','#FF3B5C','#0F6E56','#5b8df5','#993556'];
+const ADVANCE_RATE=0.55;
+
+function getBrackets(){
+  const age=settings.ageGroup||'over30';
+  const ch=settings.children||'0';
+  const chN=ch==='4plus'?4:parseInt(ch);
+  let r1=0.09;if(age==='under25') r1=0;
+  let r2=0.20;
+  if(age==='under25') r2=0;
+  else if(age==='26to30') r2=0.09;
+  else if(chN>=4) r2=0;
+  else if(chN===3) r2=0.09;
+  else if(chN===2) r2=0.16;
+  else if(chN===1) r2=0.18;
+  const cd=Math.min(chN,4)*0.02;
+  return[
+    {lim:10000,   r:r1, lbl:'€0–€10.000'},
+    {lim:20000,   r:r2, lbl:'€10.001–€20.000'},
+    {lim:30000,   r:Math.max(0,0.26-cd), lbl:'€20.001–€30.000'},
+    {lim:40000,   r:Math.max(0,0.34-cd), lbl:'€30.001–€40.000'},
+    {lim:60000,   r:Math.max(0,0.39-cd), lbl:'€40.001–€60.000'},
+    {lim:Infinity,r:Math.max(0,0.44-cd), lbl:'€60.001+'}
+  ];
+}
+Object.defineProperty(window,'BRACKETS',{get:getBrackets});
+
+let weeks=[],expenses=[],otherIncome=[],settings={types:[{name:'Ατομική',rate:80,dur:60}],efka:'265',efkaCustom:0,targetH:0,targetInc:0,workMonths:12,ageGroup:'over30',children:'0',residence:'greece'};
+let curYear='2026',moChart=null,hoursChart=null,combChart=null,entryMode='week';
+
+/* qty — tracks stepper values; replaces DOM number inputs */
+let qty={};
+
+/* ── Storage ── */
+function ps(k,v){try{if(v!==undefined)localStorage.setItem(k,JSON.stringify(v));else return JSON.parse(localStorage.getItem(k));}catch(e){return null;}}
+function loadAll(){
+  weeks=ps('pso_weeks')||[];expenses=ps('pso_exp')||[];otherIncome=ps('pso_other')||[];
+  const s=ps('pso_settings');if(s)settings={...settings,...s};
+  weeks=weeks.map(w=>({...w,entryType:w.entryType||'week'}));
+}
+function saveAll(){ps('pso_weeks',weeks);ps('pso_exp',expenses);ps('pso_other',otherIncome);ps('pso_settings',settings);}
+
+/* ── Helpers ── */
+function fmt(n){return'€'+Math.round(n).toLocaleString('el-GR');}
+function getMonday(d){
+  const dt=new Date(d+'T00:00:00');const day=dt.getDay();
+  const diff=day===0?-6:1-day;dt.setDate(dt.getDate()+diff);
+  return dt.toISOString().split('T')[0];
+}
+function weekLabel(s){
+  if(!s)return'';const d=new Date(s+'T00:00:00'),e=new Date(d);e.setDate(e.getDate()+6);
+  return d.getDate()+' '+MS[d.getMonth()]+' – '+e.getDate()+' '+MS[e.getMonth()];
+}
+function flash(id){const el=document.getElementById(id);if(!el)return;el.style.opacity=1;setTimeout(()=>{el.style.opacity=0;},1800);}
+function getEfkaM(){const c=settings.efka;return c==='custom'?parseFloat(settings.efkaCustom)||0:parseFloat(c)||265;}
+
+/* ── Tax calc ── */
+function calcTax(taxable){
+  if(!taxable||taxable<=0)return{tax:0,det:[]};
+  const brackets=getBrackets();let tax=0,prev=0;const det=[];
+  for(const b of brackets){
+    if(prev>=taxable)break;const top=Math.min(taxable,b.lim);const chunk=top-prev;
+    const amt=chunk*b.r;det.push({lbl:b.lbl,r:b.r,chunk,amt,lim:b.lim});tax+=amt;prev=top;
+  }
+  return{tax,det};
+}
+
+/* ── Data aggregation ── */
+function yearData(){
+  const yw=weeks.filter(w=>{
+    if(w.entryType==='month') return w.weekStart.startsWith(curYear);
+    const d=new Date(w.weekStart+'T00:00:00');const mid=new Date(d);mid.setDate(d.getDate()+3);
+    return String(mid.getFullYear())===curYear||w.weekStart.startsWith(curYear);
+  });
+  const ye=expenses.filter(e=>e.month.startsWith(curYear));
+  const gross=yw.reduce((s,w)=>s+w.totalIncome,0);
+  const taxableGross=yw.reduce((s,w)=>s+(w.taxable!==false?w.totalIncome:0),0);
+  const otherGross=otherIncomeForYear(curYear);
+  const totalGrossForTax=taxableGross+otherGross;
+  const totalExp=ye.reduce((s,e)=>s+e.amt,0);
+  const deductibleExp=ye.reduce((s,e)=>s+(e.deductible!==false?e.amt:0),0);
+  const efkaM=getEfkaM();const efkaA=efkaM*12;
+  const taxable=Math.max(0,totalGrossForTax-deductibleExp-efkaA);
+  const{tax,det}=calcTax(taxable);
+  const net=gross-totalExp-efkaA-tax;
+  return{gross,taxableGross,otherGross,totalGrossForTax,totalExp,deductibleExp,efkaM,efkaA,taxable,tax,det,net,
+    sessions:yw.reduce((s,w)=>s+w.totalDone,0),
+    totalHours:yw.reduce((s,w)=>s+(w.totalHours||0),0),
+    numWeeks:yw.length,
+    numMonthsWithData:new Set(yw.map(w=>w.weekStart.substring(0,7))).size
+  };
+}
+
+function monthData(yr,mo){
+  const prefix=yr+'-'+String(mo+1).padStart(2,'0');
+  const mw=weeks.filter(w=>{
+    if(w.entryType==='month') return w.weekStart===prefix+'-01';
+    if(w.weekStart.startsWith(prefix)) return true;
+    const d=new Date(w.weekStart+'T00:00:00');const mid=new Date(d);mid.setDate(d.getDate()+3);
+    return mid.getFullYear()===parseInt(yr)&&mid.getMonth()===mo;
+  });
+  const me=expenses.filter(e=>e.month===prefix);
+  const gross=mw.reduce((s,w)=>s+w.totalIncome,0);
+  const taxableGross=mw.reduce((s,w)=>s+(w.taxable!==false?w.totalIncome:0),0);
+  const totalExp=me.reduce((s,e)=>s+e.amt,0);
+  const deductibleExp=me.reduce((s,e)=>s+(e.deductible!==false?e.amt:0),0);
+  const efkaM=getEfkaM();const hours=mw.reduce((s,w)=>s+(w.totalHours||0),0);
+  const workMonths=settings.workMonths||12;
+  const allYearWeeks=weeks.filter(w=>w.weekStart.startsWith(yr));
+  const allYearExp=expenses.filter(e=>e.month.startsWith(yr));
+  const monthsWithData=new Set(allYearWeeks.map(w=>w.weekStart.substring(0,7))).size||1;
+  const avgMonthlyGross=allYearWeeks.reduce((s,w)=>s+(w.taxable!==false?w.totalIncome:0),0)/monthsWithData;
+  const avgMonthlyDeductExp=allYearExp.reduce((s,e)=>s+(e.deductible!==false?e.amt:0),0)/monthsWithData;
+  const projAnnualGross=avgMonthlyGross*workMonths;
+  const projAnnualExp=avgMonthlyDeductExp*workMonths;
+  const projAnnualEfka=efkaM*12;
+  const projAnnualTaxable=Math.max(0,projAnnualGross-projAnnualExp-projAnnualEfka);
+  const projAnnualTax=calcTax(projAnnualTaxable).tax;
+  const tax=projAnnualTax/12;
+  const net=gross-totalExp-efkaM-tax;
+  return{gross,taxableGross,totalExp,deductibleExp,efkaM,tax,net,hours,
+    projAnnualGross,projAnnualTaxable,projAnnualTax,workMonths,monthsWithData};
+}
+
+/* ── Quick-add sheet ── */
+function openQuickAdd(){
+  document.getElementById('qa-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeQuickAdd(){
+  document.getElementById('qa-overlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+/* ── Year picker ── */
+function toggleYearPicker(){} // legacy stub
+
+function handleYearChange(yr){
+  curYear=yr;
+  ['yr-display','yr-display-other','yr-display-combined','yr-display-tax'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.tagName==='SELECT'?el.value=yr:el.textContent=yr;
+  });
+  if(mainChart){mainChart.destroy();mainChart=null;}
+  renderAll();
+}
+
+/* ── FAB Add Sheet ── */
+function openAddSheet(){
+  document.getElementById('add-overlay').classList.add('open');
+  showAddStep1();
+  const now=new Date();
+  const moStr=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  const wkEl=document.getElementById('fab-q-week');
+  if(wkEl&&!wkEl.value)wkEl.value=getMonday(now.toISOString().split('T')[0]);
+  const moEl=document.getElementById('fab-q-month');if(moEl&&!moEl.value)moEl.value=moStr;
+  const expMo=document.getElementById('fab-exp-mo');if(expMo&&!expMo.value)expMo.value=moStr;
+  renderFabSessionInputs();
+}
+function closeAddSheet(){document.getElementById('add-overlay').classList.remove('open');}
+function showAddStep1(){
+  document.getElementById('add-step-1').style.display='block';
+  document.getElementById('add-step-income').style.display='none';
+  document.getElementById('add-step-expense').style.display='none';
+}
+function showAddForm(type){
+  document.getElementById('add-step-1').style.display='none';
+  document.getElementById('add-step-income').style.display=type==='income'?'block':'none';
+  document.getElementById('add-step-expense').style.display=type==='expense'?'block':'none';
+}
+let fabEntryMode='week';
+function setFabMode(mode){
+  fabEntryMode=mode;
+  document.getElementById('fab-picker-week').style.display=mode==='week'?'block':'none';
+  document.getElementById('fab-picker-month').style.display=mode==='month'?'block':'none';
+  document.getElementById('fab-mode-week-btn').classList.toggle('active',mode==='week');
+  document.getElementById('fab-mode-month-btn').classList.toggle('active',mode==='month');
+}
+function renderFabSessionInputs(){
+  const el=document.getElementById('fab-session-inputs');if(!el)return;
+  if(!settings.types.length){el.innerHTML='<p style="font-size:13px;color:var(--text2)">Πρόσθεσε τύπους συνεδριών στις Ρυθμίσεις.</p>';return;}
+  el.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px">'+
+    settings.types.map((t,i)=>`<div class="fg">
+      <label style="display:flex;align-items:center;gap:5px">
+        <span style="width:8px;height:8px;border-radius:50%;background:${TC[i%TC.length]};flex-shrink:0"></span>
+        ${t.name} <span style="color:var(--text2);font-size:11px;font-weight:400">${fmt(t.rate)}/${t.dur}λ</span>
+      </label>
+      <input type="number" id="fab-qt-${i}" placeholder="0" min="0" step="1" value="0">
+    </div>`).join('')+'</div>';
+}
+function submitFabIncome(){
+  const raw=fabEntryMode==='week'?document.getElementById('fab-q-week').value:null;
+  const mo=fabEntryMode==='month'?document.getElementById('fab-q-month').value:null;
+  if(fabEntryMode==='week'&&!raw){alert('Επέλεξε εβδομάδα.');return;}
+  if(fabEntryMode==='month'&&!mo){alert('Επέλεξε μήνα.');return;}
+  const weekStart=fabEntryMode==='week'?getMonday(raw):mo+'-01';
+  const taxable=document.getElementById('fab-entry-taxable')?.checked!==false;
+  const entries=[];let totalDone=0,totalIncome=0,totalHours=0;
+  settings.types.forEach((t,i)=>{
+    const n=parseInt(document.getElementById('fab-qt-'+i)?.value)||0;
+    if(n>0){const inc=n*t.rate*(t.dur/60);entries.push({name:t.name,count:n,rate:t.rate,dur:t.dur,income:inc,hours:n*(t.dur/60)});totalDone+=n;totalIncome+=inc;totalHours+=n*(t.dur/60);}
+  });
+  if(totalDone===0){alert('Βάλε τουλάχιστον μία συνεδρία.');return;}
+  const entryType=fabEntryMode==='month'?'month':'week';
+  const ex=weeks.findIndex(w=>w.weekStart===weekStart&&(w.entryType||'week')===entryType);
+  const entry={weekStart,entries,totalDone,totalIncome,totalHours,entryType,taxable};
+  if(ex>=0){if(!confirm('Υπάρχει ήδη εγγραφή. Να αντικατασταθεί;'))return;weeks[ex]=entry;}
+  else weeks.push(entry);
+  weeks.sort((a,b)=>b.weekStart.localeCompare(a.weekStart));
+  saveAll();
+  settings.types.forEach((_,i)=>{const el=document.getElementById('fab-qt-'+i);if(el)el.value='0';});
+  flash('fl-fab-income');renderAll();
+  setTimeout(()=>closeAddSheet(),800);
+}
+function submitFabExpense(){
+  const name=document.getElementById('fab-exp-name').value.trim();
+  const amt=parseFloat(document.getElementById('fab-exp-amt').value);
+  const mo=document.getElementById('fab-exp-mo').value;
+  const deductible=document.getElementById('fab-exp-deductible')?.checked!==false;
+  const recurring=document.getElementById('fab-exp-recurring')?.checked;
+  const until=document.getElementById('fab-exp-until')?.value;
+  if(!name||!amt||!mo){alert('Συμπλήρωσε όνομα, ποσό και μήνα.');return;}
+  if(recurring&&until&&until>=mo){
+    const [yrS,moS]=mo.split('-').map(Number);const [yrE,moE]=until.split('-').map(Number);
+    let added=0;
+    for(let y=yrS;y<=yrE;y++){const mStart=y===yrS?moS:1,mEnd=y===yrE?moE:12;
+      for(let m=mStart;m<=mEnd;m++){const mStr=y+'-'+String(m).padStart(2,'0');
+        if(!expenses.find(e=>e.month===mStr&&e.cat===name&&e.amt===amt)){expenses.push({month:mStr,cat:name,amt,deductible,id:Date.now()+y*100+m});added++;}
+      }
+    }
+    expenses.sort((a,b)=>b.month.localeCompare(a.month));saveAll();
+    const fe=document.getElementById('fl-fab-expense');
+    if(fe){fe.textContent='✓ Προστέθηκε σε '+added+' μήνες';fe.style.opacity=1;setTimeout(()=>{fe.style.opacity=0;fe.textContent='✓ Αποθηκεύτηκε';},2000);}
+  } else {
+    expenses.push({month:mo,cat:name,amt,deductible,id:Date.now()});
+    expenses.sort((a,b)=>b.month.localeCompare(a.month));saveAll();flash('fl-fab-expense');
+  }
+  document.getElementById('fab-exp-name').value='';document.getElementById('fab-exp-amt').value='';
+  document.getElementById('fab-exp-recurring').checked=false;
+  document.getElementById('fab-exp-until-wrap').style.display='none';
+  renderAll();setTimeout(()=>closeAddSheet(),800);
+}
+
+/* ── Settings ── */
+function toggleSettings(){
+  const o=document.getElementById('settings-overlay');
+  const isOpen=o.classList.contains('open');
+  o.classList.toggle('open',!isOpen);
+  if(!isOpen)renderSettingsPanel();
+}
+function efkaToggle(){document.getElementById('efka-custom-w').style.display=document.getElementById('efka-cat').value==='custom'?'block':'none';}
+function renderSettingsPanel(){
+  document.getElementById('types-list').innerHTML=settings.types.map((t,i)=>`
+    <div class="type-row">
+      <div style="display:flex;align-items:center;gap:7px">
+        <span style="width:8px;height:8px;border-radius:50%;background:${TC[i%TC.length]};flex-shrink:0"></span>
+        <input type="text" value="${t.name}" onchange="settings.types[${i}].name=this.value" style="border:none;background:transparent;color:var(--text);width:100%">
+      </div>
+      <input type="number" value="${t.rate}" min="0" step="5" onchange="settings.types[${i}].rate=parseFloat(this.value)||0">
+      <select onchange="settings.types[${i}].dur=parseInt(this.value)">${[45,50,60,90].map(d=>`<option value="${d}"${t.dur==d?' selected':''}>${d}λ</option>`).join('')}</select>
+      <button class="btn-x" onclick="removeType(${i})">×</button>
+    </div>`).join('');
+  document.getElementById('efka-cat').value=settings.efka||'265';efkaToggle();
+  if(settings.efka==='custom')document.getElementById('efka-custom').value=settings.efkaCustom||'';
+  document.getElementById('s-work-months').value=settings.workMonths||12;
+  document.getElementById('s-target-h').value=settings.targetH||'';
+  document.getElementById('s-target-inc').value=settings.targetInc||'';
+  document.getElementById('s-age-group').value=settings.ageGroup||'over30';
+  document.getElementById('s-children').value=settings.children||'0';
+  document.getElementById('s-residence').value=settings.residence||'greece';
+  updateTaxProfilePreview();
+}
+function updateTaxProfilePreview(){
+  const brackets=getBrackets();
+  const age=settings.ageGroup||'over30';const ch=settings.children||'0';
+  const ageLabel=age==='under25'?'Έως 25':age==='26to30'?'26–30':'Άνω 30';
+  const chLabel=ch==='0'?'χωρίς τέκνα':ch==='4plus'?'4+ τέκνα':`${ch} τέκνο/α`;
+  const el=document.getElementById('tax-profile-preview');
+  if(el)el.innerHTML=`<strong style="color:var(--text)">${ageLabel}, ${chLabel}</strong> · 
+    0–10k: <strong>${(brackets[0].r*100).toFixed(0)}%</strong> · 
+    10–20k: <strong>${(brackets[1].r*100).toFixed(0)}%</strong> · 
+    20–30k: <strong>${(brackets[2].r*100).toFixed(0)}%</strong> · 
+    60k+: <strong>${(brackets[5].r*100).toFixed(0)}%</strong>`;
+}
+function addType(){
+  const name=document.getElementById('nt-name').value.trim();
+  const rate=parseFloat(document.getElementById('nt-rate').value)||0;
+  const dur=parseInt(document.getElementById('nt-dur').value)||60;
+  if(!name){alert('Βάλε όνομα.');return;}
+  settings.types.push({name,rate,dur});
+  document.getElementById('nt-name').value='';document.getElementById('nt-rate').value='';
+  renderSettingsPanel();renderSessionInputs();
+}
+function removeType(i){askDel('type',i,'Διαγραφή τύπου "'+settings.types[i].name+'";','Οι παλιές καταχωρήσεις δεν επηρεάζονται.');}
+function saveSettings(){
+  settings.efka=document.getElementById('efka-cat').value;
+  settings.efkaCustom=parseFloat(document.getElementById('efka-custom')?.value)||0;
+  settings.workMonths=parseInt(document.getElementById('s-work-months').value)||12;
+  settings.targetH=parseFloat(document.getElementById('s-target-h').value)||0;
+  settings.targetInc=parseFloat(document.getElementById('s-target-inc').value)||0;
+  settings.ageGroup=document.getElementById('s-age-group').value;
+  settings.children=document.getElementById('s-children').value;
+  settings.residence=document.getElementById('s-residence').value;
+  saveAll();flash('fl-set');renderSessionInputs();renderFabSessionInputs();renderAll();updateTaxProfilePreview();
+}
+
+/* ── STEPPER session inputs ── */
+function renderSessionInputs(){
+  const el=document.getElementById('session-inputs');
+  if(!el)return;
+  if(!settings.types.length){
+    el.innerHTML='<p style="font-size:13px;color:var(--text2)">Πρόσθεσε τύπους συνεδριών στις Ρυθμίσεις.</p>';return;
+  }
+  // init qty for new types
+  settings.types.forEach((_,i)=>{ if(qty[i]===undefined) qty[i]=0; });
+  el.innerHTML='<div class="stepper-grid">'+settings.types.map((t,i)=>`
+    <div class="stepper-item">
+      <div class="stepper-item-label">
+        <span class="stepper-dot" style="background:${TC[i%TC.length]}"></span>
+        ${t.name}
+        <span style="color:var(--text3);font-weight:400;font-size:10px;margin-left:2px">${fmt(t.rate)}/${t.dur}λ</span>
+      </div>
+      <div class="stepper-row" id="stepper-row-${i}">
+        <button class="stepper-btn" onclick="setQty(${i},-1)" aria-label="Μείωση">−</button>
+        <div class="stepper-num ${qty[i]>0?'has-val':''}" id="stepper-num-${i}">${qty[i]||0}</div>
+        <button class="stepper-btn" onclick="setQty(${i},1)" aria-label="Αύξηση">+</button>
+      </div>
+      <div class="stepper-sub" id="stepper-sub-${i}" style="opacity:${qty[i]>0?1:0};color:var(--green)">
+        ${qty[i]>0?fmt(qty[i]*t.rate*(t.dur/60)):''}
+      </div>
+    </div>`).join('')+'</div>';
+}
+
+function setQty(i,delta){
+  qty[i]=Math.max(0,(qty[i]||0)+delta);
+  const numEl=document.getElementById('stepper-num-'+i);
+  const rowEl=document.getElementById('stepper-row-'+i);
+  const subEl=document.getElementById('stepper-sub-'+i);
+  if(numEl){numEl.textContent=qty[i];numEl.className='stepper-num'+(qty[i]>0?' has-val':'');}
+  if(rowEl){rowEl.style.borderColor=qty[i]>0?'var(--accent)':'var(--border2)';}
+  if(subEl){
+    const t=settings.types[i];
+    const inc=qty[i]>0?fmt(qty[i]*t.rate*(t.dur/60)):'';
+    subEl.textContent=inc;subEl.style.opacity=qty[i]>0?1:0;
+  }
+  updatePreview();
+}
+
+function resetQty(){
+  settings.types.forEach((_,i)=>{qty[i]=0;});
+  renderSessionInputs();
+  document.getElementById('preview').style.display='none';
+}
+
+/* ── Mode toggle ── */
+function setMode(m){
+  entryMode=m;const isWeek=m==='week';
+  document.getElementById('picker-week').style.display=isWeek?'flex':'none';
+  document.getElementById('picker-month').style.display=isWeek?'none':'flex';
+  document.getElementById('mode-week-btn').classList.toggle('active',isWeek);
+  document.getElementById('mode-month-btn').classList.toggle('active',!isWeek);
+  document.getElementById('add-entry-btn').textContent=isWeek?'Προσθήκη εβδομάδας':'Προσθήκη μήνα';
+  document.getElementById('preview-label').textContent=isWeek?'Σύνολο εβδομάδας':'Σύνολο μήνα';
+  document.getElementById('preview').style.display='none';
+  resetQty();
+}
+
+/* ── Pickers ── */
+function updateWL(){
+  const v=document.getElementById('q-week').value;
+  if(!v){document.getElementById('wl').textContent='';return;}
+  document.getElementById('wl').textContent='('+weekLabel(getMonday(v))+')';
+}
+function updateML(){
+  const v=document.getElementById('q-month').value;
+  if(!v){document.getElementById('ml').textContent='';return;}
+  const[y,m]=v.split('-');
+  document.getElementById('ml').textContent='('+MN[parseInt(m)-1]+' '+y+')';
+}
+
+/* ── Preview ── */
+function updatePreview(){
+  let total=0,totalSess=0;const lines=[];
+  settings.types.forEach((t,i)=>{
+    const n=qty[i]||0;
+    if(n>0){const inc=n*t.rate*(t.dur/60);total+=inc;totalSess+=n;
+      lines.push(`<div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:13px"><span style="color:var(--text2)">${n}× ${t.name} (${t.dur}λ × ${fmt(t.rate)}/ώρα)</span><span style="font-weight:600">${fmt(inc)}</span></div>`);
+    }
+  });
+  const box=document.getElementById('preview');
+  if(totalSess===0){if(box)box.style.display='none';return;}
+  if(box)box.style.display='block';
+  document.getElementById('preview-lines').innerHTML=lines.join('');
+  document.getElementById('preview-total').textContent=fmt(total);
+}
+
+/* ── Add entries ── */
+function addEntry(){entryMode==='week'?addWeek():addMonth();}
+
+function addWeek(){
+  const raw=document.getElementById('q-week').value;
+  if(!raw){alert('Επέλεξε εβδομάδα.');return;}
+  const weekStart=getMonday(raw);
+  const taxable=document.getElementById('entry-taxable')?.checked!==false;
+  const entries=[];let totalDone=0,totalIncome=0,totalHours=0;
+  settings.types.forEach((t,i)=>{
+    const n=qty[i]||0;
+    if(n>0){const inc=n*t.rate*(t.dur/60);const hrs=n*(t.dur/60);
+      entries.push({name:t.name,count:n,rate:t.rate,dur:t.dur,income:inc,hours:hrs});
+      totalDone+=n;totalIncome+=inc;totalHours+=hrs;}
+  });
+  if(totalDone===0){alert('Βάλε τουλάχιστον μία συνεδρία.');return;}
+  const ex=weeks.findIndex(w=>w.weekStart===weekStart&&(w.entryType||'week')!=='month');
+  const entry={weekStart,entries,totalDone,totalIncome,totalHours,entryType:'week',taxable};
+  if(ex>=0){
+    if(!confirm('Υπάρχει ήδη εγγραφή. Να αντικατασταθεί;'))return;
+    weeks[ex]=entry;
+  } else weeks.push(entry);
+  weeks.sort((a,b)=>b.weekStart.localeCompare(a.weekStart));saveAll();
+  resetQty();flash('fl-week');
+  setTimeout(()=>closeQuickAdd(),900);
+  renderAll();
+}
+
+function addMonth(){
+  const mo=document.getElementById('q-month').value;
+  if(!mo){alert('Επέλεξε μήνα.');return;}
+  const weekStart=mo+'-01';
+  const taxable=document.getElementById('entry-taxable')?.checked!==false;
+  const entries=[];let totalDone=0,totalIncome=0,totalHours=0;
+  settings.types.forEach((t,i)=>{
+    const n=qty[i]||0;
+    if(n>0){const inc=n*t.rate*(t.dur/60);const hrs=n*(t.dur/60);
+      entries.push({name:t.name,count:n,rate:t.rate,dur:t.dur,income:inc,hours:hrs});
+      totalDone+=n;totalIncome+=inc;totalHours+=hrs;}
+  });
+  if(totalDone===0){alert('Βάλε τουλάχιστον μία συνεδρία.');return;}
+  const ex=weeks.findIndex(w=>w.weekStart===weekStart&&w.entryType==='month');
+  const entry={weekStart,entries,totalDone,totalIncome,totalHours,entryType:'month',taxable};
+  if(ex>=0){
+    if(!confirm('Υπάρχει ήδη μηνιαία εγγραφή. Να αντικατασταθεί;'))return;
+    weeks[ex]=entry;
+  } else weeks.push(entry);
+  weeks.sort((a,b)=>b.weekStart.localeCompare(a.weekStart));saveAll();
+  resetQty();flash('fl-week');
+  setTimeout(()=>closeQuickAdd(),900);
+  renderAll();
+}
+
+/* ── Delete modal (replaces native confirm()) ── */
+let _delPending=null;
+function askDel(type,id,title,desc){
+  _delPending={type,id};
+  document.getElementById('del-modal-title').textContent=title||'Διαγραφή;';
+  document.getElementById('del-modal-desc').textContent=desc||'Αυτή η ενέργεια δεν αναιρείται.';
+  document.getElementById('del-modal-overlay').classList.add('open');
+}
+function executeDel(){
+  if(!_delPending)return;
+  const{type,id}=_delPending;
+  if(type==='entry'){weeks.splice(id,1);}
+  else if(type==='exp'){expenses=expenses.filter(e=>e.id!==id);}
+  else if(type==='other'){otherIncome=otherIncome.filter(o=>o.id!==id);}
+  else if(type==='type'){settings.types.splice(id,1);saveAll();renderSettingsPanel();renderSessionInputs();cancelDel();return;}
+  saveAll();renderAll();
+  cancelDel();
+}
+function cancelDel(){
+  document.getElementById('del-modal-overlay').classList.remove('open');
+  _delPending=null;
+}
+
+/* ── Entry list ── */
+function renderEntryList(){
+  const sel=document.getElementById('wk-yr-filter');
+  const years=[...new Set(weeks.map(w=>w.weekStart.split('-')[0]))].sort().reverse();
+  const cur=sel.value;
+  sel.innerHTML='<option value="all">Όλα</option>';
+  years.forEach(y=>{const o=document.createElement('option');o.value=y;o.textContent=y;if(y===cur)o.selected=true;sel.appendChild(o);});
+  const f=sel.value;
+  const filtered=weeks.filter(w=>f==='all'||w.weekStart.startsWith(f));
+  const body=document.getElementById('entry-list-body');
+  if(!filtered.length){
+    body.innerHTML=`<div class="onboard">
+      <div class="onboard-icon">📋</div>
+      <div class="onboard-title">Καμία καταχώρηση ακόμα</div>
+      <div class="onboard-desc">Πάτησε το <strong style="color:var(--accent)">+</strong> κουμπί κάτω δεξιά για να προσθέσεις την πρώτη σου εβδομάδα ή μήνα.</div>
+    </div>`;return;
+  }
+  body.innerHTML=filtered.map(w=>{
+    const idx=weeks.indexOf(w);
+    const isMonth=(w.entryType||'week')==='month';
+    const periodLabel=isMonth
+      ?MS[parseInt(w.weekStart.split('-')[1])-1]+' '+w.weekStart.split('-')[0]
+      :weekLabel(w.weekStart);
+    const typePill=isMonth
+      ?`<span class="pill pill-a">Μήνας</span>`
+      :`<span class="pill pill-gray">Εβδ.</span>`;
+    const taxPill=w.taxable===false?`<span class="pill" style="background:rgba(255,59,92,.1);color:#FF6B82">Μη φορ.</span>`:'';
+    const breakdown=w.entries.map(e=>{
+      const ti=settings.types.findIndex(t=>t.name===e.name);
+      const color=ti>=0?TC[ti%TC.length]:'#888780';
+      return`<span style="display:inline-flex;align-items:center;gap:3px;font-size:12px;color:var(--text2)">
+        <span style="width:6px;height:6px;border-radius:50%;background:${color};flex-shrink:0;display:inline-block"></span>
+        ${e.count}× ${e.name}
+      </span>`;
+    }).join('');
+    const target=settings.targetH||0;
+    const pct=(!isMonth&&target>0)?Math.round(w.totalHours/target*100):null;
+    const goalPill=pct!==null&&pct>=100?'<span class="pill pill-g">✓ Στόχος</span>':pct!==null&&pct>=75?'<span class="pill pill-g">Καλά</span>':pct!==null?`<span class="pill pill-a">${pct}%</span>`:'';
+    const amtColor=w.taxable===false?'var(--text2)':'var(--green)';
+    return`<div class="hist-row">
+      <div class="hist-top">
+        <span class="hist-period">${periodLabel}</span>
+        <div class="hist-badges">${typePill}${taxPill}${goalPill}</div>
+        <span class="hist-amount" style="color:${amtColor}">${fmt(w.totalIncome)}</span>
+      </div>
+      <div class="hist-bottom">
+        <div class="hist-breakdown">${breakdown}</div>
+        <div class="hist-actions">
+          <button class="btn-x" title="Επεξεργασία" onclick="editEntry(${idx})" style="font-size:13px">✏️</button>
+          <button class="btn-x" onclick="askDel('entry',${idx},'Διαγραφή καταχώρησης;','${periodLabel.replace(/'/g,"&#39;")} — ${fmt(w.totalIncome)}')">×</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function editEntry(i){
+  const w=weeks[i];const isMonth=w.entryType==='month';
+  setMode(isMonth?'month':'week');
+  openQuickAdd();
+  if(isMonth){document.getElementById('q-month').value=w.weekStart.substring(0,7);updateML();}
+  else{document.getElementById('q-week').value=w.weekStart;updateWL();}
+  settings.types.forEach((t,ti)=>{
+    const entry=w.entries.find(e=>e.name===t.name);
+    qty[ti]=entry?entry.count:0;
+  });
+  const taxEl=document.getElementById('entry-taxable');
+  if(taxEl)taxEl.checked=w.taxable!==false;
+  renderSessionInputs();updatePreview();
+  weeks.splice(i,1);saveAll();renderEntryList();
+}
+
+/* ── Expenses ── */
+function addExpense(){
+  const name=document.getElementById('exp-name').value.trim();
+  const amt=parseFloat(document.getElementById('exp-amt').value);
+  const mo=document.getElementById('exp-mo').value;
+  const recurring=document.getElementById('exp-recurring')?.checked;
+  const until=document.getElementById('exp-until')?.value;
+  const deductible=document.getElementById('exp-deductible')?.checked!==false;
+  if(!name||!amt||!mo){alert('Συμπλήρωσε όνομα, ποσό και μήνα.');return;}
+  if(recurring&&until&&until>=mo){
+    const[yrS,moS]=mo.split('-').map(Number);const[yrE,moE]=until.split('-').map(Number);
+    let added=0;
+    for(let y=yrS;y<=yrE;y++){
+      const mStart=y===yrS?moS:1;const mEnd=y===yrE?moE:12;
+      for(let m=mStart;m<=mEnd;m++){
+        const monthStr=y+'-'+String(m).padStart(2,'0');
+        const exists=expenses.find(e=>e.month===monthStr&&e.cat===name&&e.amt===amt);
+        if(!exists){expenses.push({month:monthStr,cat:name,amt,deductible,id:Date.now()+y*100+m});added++;}
+      }
+    }
+    expenses.sort((a,b)=>b.month.localeCompare(a.month));saveAll();
+    document.getElementById('exp-name').value='';document.getElementById('exp-amt').value='';
+    document.getElementById('exp-recurring').checked=false;
+    document.getElementById('exp-until').value='';
+    document.getElementById('exp-until-wrap').style.display='none';
+    const fe=document.getElementById('fl-exp');
+    if(fe){fe.textContent='Προστέθηκε σε '+added+' μήνες';fe.style.opacity=1;setTimeout(()=>{fe.style.opacity=0;fe.textContent='✓ Αποθηκεύτηκε';},2200);}
+    renderAll();
+  } else {
+    expenses.push({month:mo,cat:name,amt,deductible,id:Date.now()});
+    expenses.sort((a,b)=>b.month.localeCompare(a.month));saveAll();
+    document.getElementById('exp-name').value='';document.getElementById('exp-amt').value='';
+    flash('fl-exp');renderAll();
+  }
+}
+function renderExpListInline(){
+  const filtered=expenses.filter(e=>e.month.startsWith(curYear));
+  const el=document.getElementById('exp-list-inline');
+  if(!filtered.length){el.innerHTML='<div class="empty">Δεν υπάρχουν έξοδα για το '+curYear+'</div>';return;}
+  const total=filtered.reduce((s,e)=>s+e.amt,0);
+  const totalDeduct=filtered.reduce((s,e)=>s+(e.deductible!==false?e.amt:0),0);
+  el.innerHTML=filtered.map(e=>`<div class="exp-row">
+    <span style="color:var(--text2);min-width:70px;flex-shrink:0;font-size:12px">${e.month}</span>
+    <span style="flex:1;font-size:13px;display:flex;align-items:center;gap:6px">${e.cat}${e.deductible===false?'<span class="pill pill-r" style="font-size:9px">Μη εκπ.</span>':''}</span>
+    <span style="font-weight:700;color:var(--danger);font-size:13px;white-space:nowrap">-${fmt(e.amt)}</span>
+    <button class="btn-x" onclick="askDel('exp',${e.id},'Διαγραφή εξόδου;','${e.cat.replace(/'/g,"&#39;")} – ${fmt(e.amt)}')">×</button>
+  </div>`).join('')+
+  `<div class="exp-row" style="font-weight:700;border-top:0.5px solid var(--border)">
+    <span style="min-width:70px;flex-shrink:0"></span>
+    <span style="flex:1;color:var(--text2);font-size:12px">Σύνολο ${curYear}</span>
+    <span style="color:var(--danger)">-${fmt(total)}</span>
+    <div style="width:34px"></div>
+  </div>`;
+}
+
+/* ── Month grid ── */
+function renderMonthGrid(){
+  const el=document.getElementById('month-grid');if(!el)return;
+  const now=new Date();
+  const isCurYear=parseInt(curYear)===now.getFullYear();
+  const curMo=now.getMonth();
+  const data=[];
+  for(let m=0;m<12;m++){const d=monthData(curYear,m);data.push({month:MS[m],gross:d.gross,m});}
+  const max=Math.max(...data.map(d=>d.gross),1);
+  el.innerHTML=data.map(d=>{
+    const pct=Math.round(d.gross/max*100);
+    const isEmpty=d.gross===0;
+    const isFuture=isCurYear&&d.m>curMo;
+    const isCurrent=isCurYear&&d.m===curMo;
+    const classes=['mc',isCurrent?'current-month':'',isFuture||(!isCurrent&&isEmpty)?'':''].join(' ').trim();
+    return`<div class="${classes}" style="opacity:${isFuture?0.25:isEmpty&&!isCurrent?0.45:1}">
+      <div class="mc-name">${d.month}</div>
+      <div class="mc-amt ${isEmpty&&!isCurrent?'neu':'pos'}" style="font-size:${d.gross>=10000?11:13}px">
+        ${isFuture?'':isEmpty?'—':fmt(d.gross)}
+      </div>
+      <div class="mc-bar"><div class="mc-fill" style="width:${isFuture?0:pct}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+/* ── Other income helpers ── */
+function otherIncomeForYear(yr){
+  return otherIncome.reduce((sum,o)=>{
+    const fromYr=parseInt((o.from||yr+'-01').split('-')[0]);
+    const fromMo=parseInt((o.from||yr+'-01').split('-')[1])-1;
+    const toStr=o.to||yr+'-12';
+    const toYr=parseInt(toStr.split('-')[0]);
+    const toMo=parseInt(toStr.split('-')[1])-1;
+    const yrInt=parseInt(yr);
+    const startMo=fromYr<yrInt?0:(fromYr===yrInt?fromMo:null);
+    const endMo=toYr>yrInt?11:(toYr===yrInt?toMo:null);
+    if(startMo===null||endMo===null)return sum;
+    const months=endMo-startMo+1;
+    return sum+(months>0?o.amount*months:0);
+  },0);
+}
+function otherIncomeForMonth(yr,mo){
+  return otherIncome.reduce((sum,o)=>{
+    const prefix=yr+'-'+String(mo+1).padStart(2,'0');
+    const from=o.from||yr+'-01';const to=o.to||yr+'-12';
+    if(prefix>=from&&prefix<=to)return sum+o.amount;
+    return sum;
+  },0);
+}
+
+/* ── Other income add/delete ── */
+function addOtherIncome(){
+  const name=document.getElementById('oi-name').value.trim();
+  const amt=parseFloat(document.getElementById('oi-amt').value);
+  const from=document.getElementById('oi-from').value;
+  const to=document.getElementById('oi-to').value;
+  if(!name||!amt||!from){alert('Συμπλήρωσε περιγραφή, ποσό και μήνα έναρξης.');return;}
+  otherIncome.push({id:Date.now(),name,amount:amt,from,to:to||''});
+  otherIncome.sort((a,b)=>a.from.localeCompare(b.from));saveAll();
+  document.getElementById('oi-name').value='';document.getElementById('oi-amt').value='';
+  flash('fl-other');renderOtherPage();renderAll();
+}
+function addOther(){addOtherIncome();}
+
+/* ── Page navigation ── */
+function showPage(page){
+  ['main','other','combined','tax'].forEach(p=>{
+    const s=document.getElementById('screen-'+p);if(s)s.classList.toggle('active',p===page);
+    const n=document.getElementById('nav-'+p);if(n)n.classList.toggle('active',p===page);
+  });
+  if(page==='other')renderOtherPage();
+  if(page==='combined')renderCombined();
+  if(page==='tax')renderTaxPage();
+}
+
+/* ── Render other income page ── */
+function renderOtherPage(){
+  const totalYear=otherIncomeForYear(curYear);
+  const el=document.getElementById('other-stats');
+  if(el)el.innerHTML=statCard('Ετήσιο εισόδημα','pos',fmt(totalYear),'άλλη εργασία '+curYear)+
+    statCard('Μέσο μηνιαίο','inf',fmt(totalYear/12),'εκτίμηση');
+  const body=document.getElementById('other-list');if(!body)return;
+  if(!otherIncome.length){body.innerHTML='<div class="empty">Δεν υπάρχουν εγγραφές ακόμα</div>';return;}
+  body.innerHTML=otherIncome.map(o=>`
+    <div class="tx-row">
+      <div class="tx-icon other"><div style="width:10px;height:10px;border-radius:50%;background:#5b8df5"></div></div>
+      <div class="tx-info">
+        <div class="tx-name">${o.name}</div>
+        <div class="tx-sub">${o.from}${o.to?' → '+o.to:' · τρέχον'}</div>
+      </div>
+      <div class="tx-amt pos">${fmt(o.amount)}/μήνα</div>
+      <button class="btn-x" onclick="askDel('other',${o.id},'Διαγραφή πηγής;','${o.name.replace(/'/g,"&#39;")}')">×</button>
+    </div>`).join('');
+}
+
+/* ── Combined view ── */
+function renderCombined(){
+  const yd=yearData();
+  const otherGross=otherIncomeForYear(curYear);
+  const totalGross=yd.gross+otherGross;
+  const taxable=Math.max(0,totalGross-(yd.deductibleExp||yd.totalExp)-yd.efkaA);
+  const{tax,det}=calcTax(taxable);
+  const net=totalGross-yd.totalExp-yd.efkaA-tax;
+  const eff=totalGross>0?(tax/totalGross*100).toFixed(1):0;
+  const combStats=document.getElementById('comb-stats');
+  if(combStats)combStats.innerHTML=
+    statCard('Συνολικό εισόδημα','pos',fmt(totalGross),'γραφείο + άλλη εργασία')+
+    statCard('Φόρος εισοδήματος','amb',fmt(tax),'eff. '+eff+'%')+
+    statCard('ΕΦΚΑ + Προκαταβολή','neg',fmt(yd.efkaA+tax*ADVANCE_RATE),'υποχρεώσεις')+
+    statCard('Καθαρό (μετά όλων)',net-tax*ADVANCE_RATE>=0?'pos':'neg',fmt(net-tax*ADVANCE_RATE),'τελικό');
+  const combSum=document.getElementById('comb-summary');
+  if(combSum)combSum.innerHTML=`
+    <div class="sum-row"><span style="color:var(--text2)">Εισόδημα γραφείου</span><span style="font-weight:600;color:var(--green)">${fmt(yd.gross)}</span></div>
+    <div class="sum-row"><span style="color:var(--text2)">+ Άλλη εργασία</span><span style="font-weight:600;color:#5b8df5">+${fmt(otherGross)}</span></div>
+    <div class="sum-row"><span style="color:var(--text2)">− Εκπεστέα έξοδα</span><span style="color:var(--danger)">-${fmt(yd.deductibleExp||yd.totalExp)}</span></div>
+    <div class="sum-row"><span style="color:var(--text2)">− ΕΦΚΑ</span><span style="color:var(--blue)">-${fmt(yd.efkaA)}</span></div>
+    <div class="sum-row"><span style="color:var(--text2)">Φορολογητέο</span><span style="font-weight:600">${fmt(taxable)}</span></div>
+    <div class="sum-row"><span style="color:var(--text2)">Φόρος (${eff}%)</span><span style="color:var(--amber)">-${fmt(tax)}</span></div>
+    <div class="sum-row"><span style="color:var(--text2)">+ Προκαταβολή 55%</span><span style="color:var(--amber)">+${fmt(tax*ADVANCE_RATE)}</span></div>
+    <div class="sum-row tot"><span>Καθαρό (μετά όλων)</span><span style="color:${(net-tax*ADVANCE_RATE)>=0?'var(--green)':'var(--danger)'}">${fmt(net-tax*ADVANCE_RATE)}</span></div>`;
+  const combBr=document.getElementById('comb-brackets');
+  if(combBr)combBr.innerHTML=!taxable?'<p style="font-size:13px;color:var(--text2)">Πρόσθεσε εισόδημα για ανάλυση.</p>':
+    det.map(b=>`<div style="display:flex;justify-content:space-between;margin-bottom:2px;font-size:13px"><span style="color:var(--text2)">${b.lbl} × ${(b.r*100).toFixed(0)}%</span><span style="font-weight:700">${fmt(b.amt)}</span></div>
+    <div class="bracket-bar"><div class="bracket-fill" style="width:${Math.min(100,b.chunk/(taxable||1)*100).toFixed(1)}%"></div></div>`).join('');
+}
+
+/* ── Render yearly ── */
+function renderYearly(){
+  const d=yearData();
+  const eff=d.gross>0?(d.tax/d.gross*100).toFixed(1):0;
+  const yrSum=document.getElementById('yr-summary');
+  if(yrSum)yrSum.innerHTML=`
+    <div class="sum-row"><span style="color:var(--text2)">Εισόδημα γραφείου</span><span style="font-weight:600;color:var(--green)">${fmt(d.gross)}</span></div>
+    ${d.otherGross>0?`<div class="sum-row"><span style="color:var(--text2)">+ Άλλη εργασία</span><span style="font-weight:600;color:#5b8df5">+${fmt(d.otherGross)}</span></div>`:''}
+    <div class="sum-row"><span style="color:var(--text2)">− Εκπεστέα έξοδα</span><span style="color:var(--danger)">-${fmt(d.deductibleExp||d.totalExp)}</span></div>
+    <div class="sum-row"><span style="color:var(--text2)">− ΕΦΚΑ</span><span style="color:var(--blue)">-${fmt(d.efkaA)}</span></div>
+    <div class="sum-row"><span style="color:var(--text2)">Φορολογητέο</span><span style="font-weight:600">${fmt(d.taxable)}</span></div>
+    <div class="sum-row"><span style="color:var(--text2)">Φόρος (${eff}%)</span><span style="color:var(--amber)">-${fmt(d.tax)}</span></div>
+    <div class="sum-row"><span style="color:var(--text2)">+ Προκαταβολή 55%</span><span style="color:var(--amber)">+${fmt(d.tax*ADVANCE_RATE)}</span></div>
+    <div class="sum-row tot"><span>Καθαρό (μετά όλων)</span><span style="color:${(d.net-d.tax*ADVANCE_RATE)>=0?'var(--green)':'var(--danger)'}">${fmt(d.net-d.tax*ADVANCE_RATE)}</span></div>`;
+  const yrBr=document.getElementById('yr-brackets');
+  if(yrBr){
+    if(!d.taxable){yrBr.innerHTML='<p style="font-size:13px;color:var(--text2)">Πρόσθεσε εισόδημα για ανάλυση.</p>';}
+    else yrBr.innerHTML=d.det.map(b=>`
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">
+        <span style="font-size:13px;color:var(--text2)">${b.lbl} × ${(b.r*100).toFixed(0)}%</span>
+        <span style="font-size:13px;font-weight:700">${fmt(b.amt)}</span>
+      </div>
+      <div class="bracket-bar"><div class="bracket-fill" style="width:${Math.min(100,b.lim===Infinity?100:b.chunk/(d.taxable||1)*100).toFixed(1)}%"></div></div>`).join('');
+  }
+}
+
+/* ── Render all ── */
+function renderAll(){
+  ['yr-display','yr-display-other','yr-display-combined','yr-display-tax'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.tagName==='SELECT'?el.value=curYear:el.textContent=curYear;
+  });
+  renderEntryList();renderMainScreen();renderYearly();renderExpListInline();
+  renderMonthGrid();
+}
+
+function renderMainScreen(){
+  const yd=yearData();
+  const targetAnnual=(settings.targetInc||0)*12;
+  const heroEl=document.getElementById('hero-amount');
+  if(heroEl)heroEl.textContent=fmt(yd.gross);
+
+  // Hero chips — smart empty state: suppress scary negatives when no income yet
+  const chipsEl=document.getElementById('hero-chips');
+  if(chipsEl){
+    if(yd.gross===0){
+      // Empty state — no income recorded yet
+      chipsEl.innerHTML=`<div style="font-size:13px;color:var(--text2);padding:4px 0">
+        Πάτησε <strong style="color:var(--accent)">+</strong> για να καταχωρήσεις την πρώτη σου εβδομάδα
+      </div>`;
+    } else {
+      const netAfterAll=yd.net-yd.tax*ADVANCE_RATE;
+      const netColor=netAfterAll>=0?'var(--green)':'var(--danger)';
+      const taxColor=yd.tax>0?'var(--amber)':'var(--text3)';
+      chipsEl.innerHTML=
+        `<div class="hero-chip"><span class="hero-chip-dot" style="background:var(--green)"></span>${yd.sessions} συνεδρίες</div>`+
+        `<div class="hero-chip"><span class="hero-chip-dot" style="background:${taxColor}"></span>Φόρος ${fmt(yd.tax)}</div>`+
+        `<div class="hero-chip"><span class="hero-chip-dot" style="background:${netColor}"></span>Καθαρό ${fmt(netAfterAll)}</div>`;
+    }
+  }
+
+  // Stats — show "—" for net when no income recorded (suppress alarming negative from ΕΦΚΑ alone)
+  const statsEl=document.getElementById('main-stats');
+  if(statsEl){
+    const noData=yd.gross===0;
+    statsEl.innerHTML=
+      statCard('Φόρος (εκτίμ.)','amb',noData?'—':fmt(yd.tax),noData?'δεν υπάρχουν δεδομένα':'βάσει τρεχόντων δεδομένων')+
+      statCard('Καθαρό έτους',noData?'neu':yd.net>=0?'pos':'neg',noData?'—':fmt(yd.net),noData?'προσθήκη εισοδήματος':'μετά εξόδων & φόρου')+
+      statCard('Έξοδα + ΕΦΚΑ','neg',fmt(yd.totalExp+yd.efkaA),noData?'ΕΦΚΑ '+fmt(yd.efkaA)+'/έτος':'σύνολο επιβαρύνσεων')+
+      statCard('Συνεδρίες','inf',String(yd.sessions),noData?'καμία ακόμα':'καταχωρημένες φέτος');
+  }
+
+  // Goal
+  const goalEl=document.getElementById('goal-section');
+  if(goalEl){
+    if(targetAnnual>0){
+      const pct=Math.min(100,yd.gross/targetAnnual*100);
+      const gc=pct>=90?'var(--green)':pct>=60?'var(--blue)':'var(--amber)';
+      goalEl.innerHTML=`<div class="card card-pad">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+          <span style="font-size:13px;font-weight:700">Στόχος εισοδήματος</span>
+          <span style="font-size:13px;color:var(--text2)">${fmt(yd.gross)} / ${fmt(targetAnnual)}</span>
+        </div>
+        <div class="progress-wrap"><div class="progress-fill" style="width:${pct.toFixed(1)}%;background:${gc}"></div></div>
+        <div style="font-size:12px;color:var(--text2);margin-top:5px">${pct.toFixed(0)}% · ${targetAnnual>yd.gross?'Απομένουν '+fmt(targetAnnual-yd.gross):'✓ Στόχος επιτεύχθηκε'}</div>
+      </div>`;
+    } else goalEl.innerHTML='';
+  }
+
+  renderMainChart(curYear);
+}
+
+function statCard(label,cls,val,sub){
+  const colors={'pos':'var(--green)','neg':'var(--danger)','amb':'var(--amber)','inf':'var(--blue)','neu':'var(--text3)'};
+  const c=colors[cls]||'transparent';
+  return`<div class="stat-card">
+    <div class="stat-card-top" style="background:${c}"></div>
+    <div class="stat-label">${label}</div>
+    <div class="stat-val ${cls}">${val}</div>
+    <div class="stat-sub">${sub}</div>
+  </div>`;
+}
+
+let mainChart=null;
+function renderMainChart(yr){
+  const incData=[],expData=[];
+  for(let m=0;m<12;m++){const d=monthData(yr,m);incData.push(Math.round(d.gross));expData.push(Math.round(d.totalExp));}
+  const hasData=incData.some(v=>v>0)||expData.some(v=>v>0);
+  const canvas=document.getElementById('mainChart');
+  const wrap=canvas?canvas.parentElement:null;
+  if(!hasData){
+    if(mainChart){mainChart.destroy();mainChart=null;}
+    if(wrap)wrap.innerHTML=`<div class="chart-empty">
+      <div class="chart-empty-icon">📊</div>
+      <div class="chart-empty-text">Το γράφημα εμφανίζεται αφού καταχωρηθεί εισόδημα</div>
+    </div>`;
+    return;
+  }
+  // restore canvas if it was replaced
+  if(wrap&&!wrap.querySelector('canvas')){
+    wrap.innerHTML='<canvas id="mainChart"></canvas>';
+  }
+  const cv=document.getElementById('mainChart');if(!cv)return;
+  const targetM=(settings.targetInc||0)>0?settings.targetInc:null;
+  const gl=document.getElementById('chart-goal-legend');if(gl)gl.style.display=targetM?'flex':'none';
+  const gc='rgba(255,255,255,0.06)',tc='#8e8e9a';
+  const datasets=[
+    {label:'Εισόδημα',data:incData,backgroundColor:'#00c896',borderRadius:4,borderSkipped:false},
+    {label:'Έξοδα',data:expData,backgroundColor:'#FF3B5C',borderRadius:4,borderSkipped:false},
+  ];
+  if(targetM)datasets.push({label:'Στόχος',data:Array(12).fill(targetM),type:'line',borderColor:'#5b8df5',backgroundColor:'transparent',borderWidth:2,borderDash:[5,4],pointRadius:0,tension:0,order:0});
+  if(mainChart){
+    mainChart.data.datasets[0].data=incData;mainChart.data.datasets[1].data=expData;
+    if(mainChart.data.datasets[2])mainChart.data.datasets[2].data=targetM?Array(12).fill(targetM):Array(12).fill(null);
+    mainChart.update();return;
+  }
+  mainChart=new Chart(cv,{type:'bar',data:{labels:MS,datasets},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': €'+Math.round(ctx.raw).toLocaleString('el-GR')}}},
+      scales:{x:{grid:{display:false},ticks:{color:tc,font:{size:10}}},y:{grid:{color:gc},ticks:{color:tc,font:{size:10},callback:v=>'€'+Math.round(v).toLocaleString('el-GR')},beginAtZero:true}}}});
+}
+
+function setHistTab(tab){
+  const isSess=tab==='sessions';
+  document.getElementById('hist-sessions-panel').style.display=isSess?'block':'none';
+  document.getElementById('hist-expenses-panel').style.display=isSess?'none':'block';
+  document.getElementById('hist-sess-btn').classList.toggle('active',isSess);
+  document.getElementById('hist-exp-btn').classList.toggle('active',!isSess);
+  if(!isSess)renderExpListInline();
+}
+
+function toggleCollapse(id,btn){
+  const el=document.getElementById(id);const open=el.classList.contains('open');
+  el.classList.toggle('open',!open);el.style.display=open?'none':'block';
+  const arrow=btn.querySelector('span:last-child');if(arrow)arrow.textContent=open?'▾':'▴';
+}
+
+/* ── TAX PAGE ── */
+function getTaxSaved(){return parseFloat(ps('pso_tax_saved'))||0;}
+function saveTaxSaved(){const v=parseFloat(document.getElementById('tax-saved').value)||0;ps('pso_tax_saved',v);renderTaxPage();}
+
+function renderTaxPage(){
+  const now=new Date();const yr=curYear;
+  const curYearInt=parseInt(yr);const isCurYear=curYearInt===now.getFullYear();
+  const monthsElapsed=isCurYear?now.getMonth()+1:12;
+  const dayOfYear=isCurYear?Math.floor((now-(new Date(now.getFullYear(),0,0)))/86400000):365;
+  const fracYear=isCurYear?dayOfYear/365:1;
+  const monthsLeft=Math.max(1,12-monthsElapsed);
+
+  const yd=yearData();
+  const efkaA=yd.efkaA;const efkaM=getEfkaM();
+  const realClinic=yd.gross;const realOther=otherIncomeForYear(yr);
+  const realGross=realClinic+realOther;
+  const realDeductExp=yd.deductibleExp!==undefined?yd.deductibleExp:yd.totalExp;
+  const realTaxable=Math.max(0,realGross-realDeductExp-efkaA);
+  const realTaxResult=calcTax(realTaxable);
+  const realTax=realTaxResult.tax;
+  const realAdvance=realTax*ADVANCE_RATE;
+  const realTotal=realTax+efkaA+realAdvance;
+  const realNet=realGross-yd.totalExp-efkaA-realTax;
+
+  const shouldHaveSetAside=realTotal*fracYear;
+  const taxSaved=parseFloat(document.getElementById('tax-saved')?.value)||getTaxSaved();
+  const remainingToReserve=Math.max(0,realTotal-taxSaved);
+  const monthlyReserve=remainingToReserve/monthsLeft;
+  const savedPct=shouldHaveSetAside>0?taxSaved/shouldHaveSetAside*100:100;
+  const statusOk=savedPct>=90,statusWarn=savedPct>=60&&!statusOk;
+  const statusColor=statusOk?'#00c896':statusWarn?'#ffb340':'#FF3B5C';
+  const statusLabel=statusOk?'Καλή πορεία ✓':statusWarn?'Χρειάζεται προσοχή':'Πίσω από τον στόχο';
+
+  document.getElementById('tax-updated').textContent=
+    isCurYear?'βάσει καταχωρημένων δεδομένων · '+now.toLocaleDateString('el-GR'):'οριστικά δεδομένα';
+  const si=document.getElementById('tax-saved');if(si&&!si.value)si.value=getTaxSaved()||'';
+
+  /* ── Savings progress bar (replaces gauge) ── */
+  const spEl=document.getElementById('tax-savings-ui');
+  if(spEl){
+    const pct=Math.min(100,savedPct);
+    spEl.innerHTML=`
+      <div class="sp-status-row">
+        <div>
+          <div class="sp-status-text" style="color:${statusColor}">${statusLabel}</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px">${fmt(taxSaved)} αποταμιευμένα</div>
+        </div>
+        <div class="sp-pct" style="color:${statusColor}">${Math.round(pct)}%</div>
+      </div>
+      <div class="sp-track">
+        <div class="sp-fill" style="width:${pct}%;background:${statusColor}"></div>
+      </div>
+      <div class="sp-detail-row">
+        <span>Έχεις αποταμιεύσει</span>
+        <span>Στόχος τώρα: <strong style="color:var(--text)">${fmt(shouldHaveSetAside)}</strong></span>
+      </div>`;
+  }
+
+  /* ── Hero cards ── */
+  const hcard=(color,label,value,sub)=>`
+    <div style="background:var(--bg);border-radius:12px;padding:1.1rem 1rem;border-top:3px solid ${color};text-align:center">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin-bottom:.5rem">${label}</div>
+      <div style="font-size:24px;font-weight:800;color:${color};line-height:1.1;margin-bottom:.25rem">${value}</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.5">${sub}</div>
+    </div>`;
+  document.getElementById('tax-action-cards').innerHTML=
+    hcard('#FF3B5C','Συνολικές υποχρεώσεις',fmt(realTotal),
+      'Φόρος '+fmt(realTax)+' + ΕΦΚΑ '+fmt(efkaA)+'<br>+ Προκαταβολή '+fmt(realAdvance))+
+    hcard(monthlyReserve>0?'#ffb340':'#00c896','Αποταμίευση / μήνα',
+      monthlyReserve>0?fmt(monthlyReserve):'Καλύπτεσαι!',
+      monthlyReserve>0?'για τους επόμενους '+monthsLeft+' μήνες':'Έχεις '+fmt(taxSaved));
+
+  /* ── Ανάλυση φόρου ── */
+  const bracketBar=(det,totalTax)=>det.map(b=>`
+    <div style="margin-bottom:5px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:2px">
+        <span style="color:var(--text2)">${b.lbl} &times; ${(b.r*100).toFixed(0)}% = ${fmt(b.chunk)} εισοδ.</span>
+        <span style="font-weight:600;color:var(--amber)">${fmt(b.amt)}</span>
+      </div>
+      <div style="height:4px;border-radius:2px;background:var(--bg3);overflow:hidden">
+        <div style="height:100%;border-radius:2px;background:var(--amber);opacity:.7;width:${Math.min(100,(b.amt/(totalTax||1)*100)).toFixed(1)}%"></div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('tax-projection').innerHTML=realGross===0?
+    `<div class="onboard">
+      <div class="onboard-icon">🔢</div>
+      <div class="onboard-title">Δεν υπάρχουν δεδομένα</div>
+      <div class="onboard-desc">Πρόσθεσε εισόδημα για να δεις την ανάλυση φόρου.</div>
+    </div>`:`
+    <div style="display:grid;grid-template-columns:1fr auto;gap:3px 16px;font-size:13px;margin-bottom:14px">
+      <span style="color:var(--text2)">Εισόδημα γραφείου</span><span style="font-weight:600;color:var(--green);text-align:right">${fmt(realClinic)}</span>
+      ${realOther>0?`<span style="color:var(--text2)">+ Άλλη εργασία</span><span style="font-weight:600;color:#5b8df5;text-align:right">+${fmt(realOther)}</span>`:''}
+      <span style="color:var(--text2)">− Εκπεστέα έξοδα</span><span style="color:var(--danger);text-align:right">-${fmt(realDeductExp)}</span>
+      <span style="color:var(--text2)">− ΕΦΚΑ</span><span style="color:var(--blue);text-align:right">-${fmt(efkaA)}</span>
+      <span style="color:var(--text2);padding-top:6px;border-top:0.5px solid var(--border)">Φορολογητέο εισόδημα</span>
+      <span style="font-weight:600;text-align:right;padding-top:6px;border-top:0.5px solid var(--border)">${fmt(realTaxable)}</span>
+      <span style="color:var(--text2)">Φόρος εισοδήματος</span><span style="font-weight:600;color:var(--amber);text-align:right">${fmt(realTax)}</span>
+      <span style="color:var(--text2)">+ Προκαταβολή (55%)</span><span style="color:var(--amber);text-align:right">+${fmt(realAdvance)}</span>
+      <span style="font-weight:700;padding-top:6px;border-top:0.5px solid var(--border)">Καθαρό εισόδημα</span>
+      <span style="font-weight:700;color:${realNet>=0?'var(--green)':'var(--danger)'};text-align:right;padding-top:6px;border-top:0.5px solid var(--border)">${fmt(realNet)}</span>
+    </div>
+    ${realTaxable>0?`<div style="background:var(--bg2);border-radius:10px;padding:12px">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:10px">Ανάλυση κλιμακίων</div>
+      ${bracketBar(realTaxResult.det,realTax)}
+      <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;padding-top:8px;border-top:0.5px solid var(--border);margin-top:6px">
+        <span>Σύνολο φόρου</span><span style="color:var(--amber)">${fmt(realTax)}</span>
+      </div>
+    </div>`:''}
+    <p style="font-size:11px;color:var(--text2);margin-top:10px;line-height:1.5">Βάσει καταχωρημένων δεδομένων. Προκαταβολή 55% πληρώνεται μαζί με τον φόρο και συμψηφίζεται την επόμενη χρονιά.</p>`;
+
+  /* ── Βελτιστοποίηση ── */
+  const viabilityTarget=(settings.targetInc||0)*12;
+  const monthsWithData=new Set(weeks.filter(w=>w.weekStart.startsWith(yr)).map(w=>w.weekStart.substring(0,7))).size||1;
+  const avgClinicM=realClinic/monthsWithData;
+  const projExtraClinic=avgClinicM*monthsLeft;
+  const expMonthsWithData=new Set(expenses.filter(e=>e.month.startsWith(yr)).map(e=>e.month)).size||1;
+  const avgExpM=yd.totalExp/expMonthsWithData;
+  const projYearEndGross=realGross+projExtraClinic;
+  const projYearEndExp=yd.totalExp+avgExpM*monthsLeft;
+  const projYearEndTaxable=Math.max(0,projYearEndGross-projYearEndExp-efkaA);
+  const brackets=getBrackets();
+  let curBracketIdx=0;
+  for(let i=0;i<brackets.length;i++){if(realTaxable>=(i===0?0:brackets[i-1].lim))curBracketIdx=i;}
+  const curBracket=brackets[curBracketIdx];
+  let projBracketIdx=0;
+  for(let i=0;i<brackets.length;i++){if(projYearEndTaxable>=(i===0?0:brackets[i-1].lim))projBracketIdx=i;}
+  const projBracket=brackets[projBracketIdx];
+  const prevBracket=projBracketIdx>0?brackets[projBracketIdx-1]:null;
+  const projBracketFloor=projBracketIdx>0?brackets[projBracketIdx-1].lim:0;
+  const toDropFromProj=projYearEndTaxable-projBracketFloor;
+  let maxSafeExp=0;
+  if(viabilityTarget>0&&realNet>viabilityTarget){let lo=0,hi=realTaxable;
+    for(let i=0;i<40;i++){const mid=(lo+hi)/2;const nTax=calcTax(Math.max(0,realTaxable-mid)).tax;
+      const nNet=realGross-(yd.totalExp+mid)-efkaA-nTax;if(nNet>=viabilityTarget)lo=mid;else hi=mid;}
+    maxSafeExp=Math.floor(lo/100)*100;}
+  else if(viabilityTarget===0){maxSafeExp=realTaxable;}
+  const extraExpForDrop=prevBracket&&toDropFromProj>0?Math.ceil(toDropFromProj):0;
+  const taxSavePerHundred=projBracket.r*100;
+  const taxSaveIfDrop=extraExpForDrop>0?calcTax(realTaxable).tax-calcTax(Math.max(0,realTaxable-extraExpForDrop)).tax:0;
+  const netAfterDrop=extraExpForDrop>0?realGross-(yd.totalExp+extraExpForDrop)-efkaA-calcTax(Math.max(0,realTaxable-extraExpForDrop)).tax:0;
+  const dropIsViable=extraExpForDrop>0&&(viabilityTarget===0||netAfterDrop>=viabilityTarget);
+
+  document.getElementById('tax-optimizer').innerHTML=realTaxable<=0?
+    '<p style="font-size:13px;color:var(--text2);padding:4px 0">Δεν υπάρχει φορολογητέο εισόδημα ακόμα.</p>':`
+    <div style="background:var(--bg2);border-radius:10px;padding:14px;margin-bottom:14px">
+      <div style="font-size:13px;font-weight:600;margin-bottom:6px">Τρέχον κλιμάκιο: <span style="color:var(--amber)">${(curBracket.r*100).toFixed(0)}%</span></div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.7">
+        Κάθε <strong style="color:var(--text)">€100 επαγγελματικών εξόδων</strong> μειώνει τον φόρο κατά
+        <strong style="color:var(--green)">€${taxSavePerHundred.toFixed(0)}</strong>
+      </div>
+    </div>
+    ${prevBracket&&extraExpForDrop>0?`<div style="border-radius:10px;padding:14px;margin-bottom:14px;border:0.5px solid ${dropIsViable?'var(--green)':'var(--border2)'}">
+      <div style="font-size:13px;font-weight:600;margin-bottom:6px;color:${dropIsViable?'var(--text)':'var(--text2)'}">
+        ${dropIsViable?'✓':'·'} Κατέβασμα στο κλιμάκιο ${(prevBracket.r*100).toFixed(0)}%
+      </div>
+      ${dropIsViable?`<div style="font-size:13px;color:var(--text2);line-height:1.7">
+        Με <strong>${fmt(extraExpForDrop)}</strong> ακόμα έξοδα εξοικονομείς <strong style="color:var(--green)">${fmt(taxSaveIfDrop)}</strong> φόρο.
+        Νέο καθαρό: <strong>${fmt(netAfterDrop)}</strong>.</div>`:
+      `<div style="font-size:13px;color:var(--text2)">Χρειάζονται <strong>${fmt(extraExpForDrop)}</strong> έξοδα — θα έφερναν το καθαρό κάτω από τον στόχο.</div>`}
+    </div>`:''}
+    <div style="border-top:0.5px solid var(--border);padding-top:12px;margin-top:4px">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:8px">Έξοδα που σκοπεύεις να κάνεις (€):</div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <input type="number" id="opt-planned-exp" placeholder="π.χ. 800" min="0" step="50"
+          style="width:130px;font-size:15px;font-weight:600;text-align:center" oninput="updateOptimizerPlanned()">
+        <div id="opt-planned-result" style="font-size:13px;color:var(--text2)"></div>
+      </div>
+      ${viabilityTarget>0?`<div style="font-size:11px;color:var(--text2);margin-top:6px">Μέγιστα ασφαλή έξοδα: <strong>${fmt(maxSafeExp)}</strong></div>`:''}
+    </div>`;
+
+  /* ── Ημερολόγιο ── */
+  const curMo=now.getMonth();
+  document.getElementById('tax-calendar').innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:4px">
+      ${[0,1,2,3,4,5,6,7,8,9,10,11].map(m=>{
+        const isPast=isCurYear&&m<curMo,isCur=isCurYear&&m===curMo;
+        const events=[{tag:'ΕΦΚΑ',bg:'rgba(91,141,245,.15)',tc:'#5b8df5',val:fmt(efkaM)}];
+        if(m===3)events.push({tag:'ΔΗΛΩΣΗ Ε1',bg:'rgba(255,179,64,.15)',tc:'#ffb340',val:'Απρίλιος'});
+        if(m===6||m===8)events.push({tag:'ΔΟΣΗ ΦΟΡΟΥ',bg:'rgba(255,59,92,.15)',tc:'#FF3B5C',val:fmt(realTax/2)});
+        return`<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;background:${isCur?'var(--bg2)':'transparent'};opacity:${isPast?.4:1}">
+          <span style="font-size:12px;font-weight:${isCur?700:400};color:${isCur?'var(--text)':'var(--text2)'};min-width:36px">${MS[m]}</span>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;flex:1">${events.map(e=>`<span style="padding:2px 7px;border-radius:5px;font-size:11px;font-weight:600;background:${e.bg};color:${e.tc}">${e.tag}</span>`).join('')}</div>
+          <span style="font-size:12px;font-weight:600;color:var(--text2);white-space:nowrap">${events[events.length-1]?.val||''}</span>
+        </div>`;
+      }).join('')}
+      <p style="font-size:11px;color:var(--text2);margin-top:4px">Ημερομηνίες ενδεικτικές. Επιβεβαιώστε με ΑΑΔΕ και λογιστή.</p>
+    </div>`;
+}
+
+function updateOptimizerPlanned(){
+  const v=parseFloat(document.getElementById('opt-planned-exp')?.value)||0;
+  if(v<=0){document.getElementById('opt-planned-result').textContent='';return;}
+  const yd=yearData();const efkaA=yd.efkaA;
+  const realGross=yd.gross+otherIncomeForYear(curYear);
+  const realTaxable=Math.max(0,realGross-yd.totalExp-efkaA);
+  const newTaxable=Math.max(0,realTaxable-v);
+  const save=calcTax(realTaxable).tax-calcTax(newTaxable).tax;
+  const newNet=realGross-(yd.totalExp+v)-efkaA-calcTax(newTaxable).tax;
+  const viabilityTarget=(settings.targetInc||0)*12;
+  const ok=viabilityTarget===0||newNet>=viabilityTarget;
+  document.getElementById('opt-planned-result').innerHTML=
+    `Εξοικ.: <strong style="color:var(--green)">-${fmt(save)}</strong> · Νέο καθαρό: <strong style="color:${ok?'var(--green)':'var(--danger)'}">${fmt(newNet)}</strong>${!ok?' ⚠️':''}`;
+}
+
+/* ── Theme toggle ── */
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  const btn=document.getElementById('theme-btn');
+  if(btn)btn.textContent=t==='light'?'☽':'☀';
+}
+function toggleTheme(){
+  const cur=document.documentElement.getAttribute('data-theme')||'dark';
+  const next=cur==='dark'?'light':'dark';
+  applyTheme(next);
+  try{localStorage.setItem('pso_theme',next);}catch(e){}
+}
+
+/* ── Init ── */
+function init(){
+  const savedTheme=localStorage.getItem('pso_theme')||'dark';
+  applyTheme(savedTheme);
+  loadAll();
+  curYear=String(new Date().getFullYear());
+  const now=new Date();
+  const todayStr=now.toISOString().split('T')[0];
+  const moStr=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  // Pre-fill fab form dates
+  const wkEl=document.getElementById('fab-q-week');if(wkEl)wkEl.value=getMonday(todayStr);
+  const moEl=document.getElementById('fab-q-month');if(moEl)moEl.value=moStr;
+  const expMo=document.getElementById('fab-exp-mo');if(expMo)expMo.value=moStr;
+  const oiFrom=document.getElementById('oi-from');if(oiFrom)oiFrom.value=moStr;
+  renderFabSessionInputs();
+  renderSessionInputs(); // keep for editEntry compatibility
+  renderAll();
+}
+init();
+</script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js').catch(()=>{});});
+}
+</script>
+</body>
+</html>
