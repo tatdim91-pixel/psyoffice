@@ -368,6 +368,7 @@ select option{background:#1a1a1c}
 
   <div class="stat-grid" id="main-stats"></div>
   <div class="section" id="goal-section"></div>
+  <div class="section"><div class="card card-pad"><div class="chart-wrap"><canvas id="mainChart"></canvas></div></div></div>
 
   <!-- Month grid (NEW) -->
   <div class="section">
@@ -681,6 +682,7 @@ Object.defineProperty(window,'BRACKETS',{get:getBrackets});
 
 let weeks=[],expenses=[],otherIncome=[],settings={types:[{name:'Ατομική',rate:80,dur:60}],efka:'265',efkaCustom:0,targetH:0,targetInc:0,workMonths:12,ageGroup:'over30',children:'0',residence:'greece',advancePayment:true};
 let curYear='2026',moChart=null,hoursChart=null,combChart=null,entryMode='week';
+let _editing=null,_editingExp=null;
 
 /* qty — tracks stepper values; replaces DOM number inputs */
 let qty={};
@@ -696,10 +698,11 @@ function saveAll(){ps('pso_weeks',weeks);ps('pso_exp',expenses);ps('pso_other',o
 
 /* ── Helpers ── */
 function fmt(n){return'€'+Math.round(n).toLocaleString('el-GR');}
+function ymd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function getMonday(d){
   const dt=new Date(d+'T00:00:00');const day=dt.getDay();
   const diff=day===0?-6:1-day;dt.setDate(dt.getDate()+diff);
-  return dt.toISOString().split('T')[0];
+  return ymd(dt);
 }
 function weekLabel(s){
   if(!s)return'';const d=new Date(s+'T00:00:00'),e=new Date(d);e.setDate(e.getDate()+6);
@@ -808,12 +811,12 @@ function openAddSheet(){
   const now=new Date();
   const moStr=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
   const wkEl=document.getElementById('fab-q-week');
-  if(wkEl&&!wkEl.value)wkEl.value=getMonday(now.toISOString().split('T')[0]);
+  if(wkEl&&!wkEl.value)wkEl.value=getMonday(ymd(now));
   const moEl=document.getElementById('fab-q-month');if(moEl&&!moEl.value)moEl.value=moStr;
   const expMo=document.getElementById('fab-exp-mo');if(expMo&&!expMo.value)expMo.value=moStr;
   renderFabSessionInputs();
 }
-function closeAddSheet(){document.getElementById('add-overlay').classList.remove('open');}
+function closeAddSheet(){document.getElementById('add-overlay').classList.remove('open');_editing=null;_editingExp=null;}
 function showAddStep1(){
   document.getElementById('add-step-1').style.display='block';
   document.getElementById('add-step-income').style.display='none';
@@ -858,6 +861,7 @@ function submitFabIncome(){
   });
   if(totalDone===0){alert('Βάλε τουλάχιστον μία συνεδρία.');return;}
   const entryType=fabEntryMode==='month'?'month':'week';
+  if(_editing){weeks=weeks.filter(x=>x!==_editing);_editing=null;}
   const ex=weeks.findIndex(w=>w.weekStart===weekStart&&(w.entryType||'week')===entryType);
   const entry={weekStart,entries,totalDone,totalIncome,totalHours,entryType,taxable};
   if(ex>=0){if(!confirm('Υπάρχει ήδη εγγραφή. Να αντικατασταθεί;'))return;weeks[ex]=entry;}
@@ -876,6 +880,7 @@ function submitFabExpense(){
   const recurring=document.getElementById('fab-exp-recurring')?.checked;
   const until=document.getElementById('fab-exp-until')?.value;
   if(!name||!amt||!mo){alert('Συμπλήρωσε όνομα, ποσό και μήνα.');return;}
+  if(_editingExp){expenses=expenses.filter(x=>x.id!==_editingExp);_editingExp=null;}
   if(recurring&&until&&until>=mo){
     const [yrS,moS]=mo.split('-').map(Number);const [yrE,moE]=until.split('-').map(Number);
     let added=0;
@@ -909,8 +914,7 @@ function editExpense(id){
   const warn=document.getElementById('tax-warning-expense');
   if(warn)warn.style.display=e.deductible===false?'flex':'none';
   // Remove original so save replaces it
-  expenses=expenses.filter(x=>x.id!==id);
-  saveAll();renderExpListInline();
+  _editingExp=id;
 }
 
 /* ── Settings ── */
@@ -1217,7 +1221,7 @@ function editEntry(i){
   if(taxEl)taxEl.checked=w.taxable===false; // check means EXCLUDE
   const warnEl=document.getElementById('tax-warning-income');
   if(warnEl)warnEl.style.display=w.taxable===false?'flex':'none';
-  weeks.splice(i,1);saveAll();renderEntryList();
+  _editing=w;
 }
 
 /* ── Expenses ── */
@@ -1918,7 +1922,7 @@ function init(){
   loadAll();
   curYear=String(new Date().getFullYear());
   const now=new Date();
-  const todayStr=now.toISOString().split('T')[0];
+  const todayStr=ymd(now);
   const moStr=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
   // Pre-fill fab form dates
   const wkEl=document.getElementById('fab-q-week');if(wkEl)wkEl.value=getMonday(todayStr);
@@ -1936,5 +1940,7 @@ if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js').catch(()=>{});});
 }
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
+<script src="cloud.js"></script>
 </body>
 </html>
